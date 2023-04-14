@@ -1,0 +1,86 @@
+alloc = 0x802c3ba4;
+ct_Mario = 0x80276cb4;
+load_Mario = 0x80276bd4;
+isTakeSituation = 0x8024359c;
+suffererIsInAttackArea = 0x8021c29c;
+tagBranch = 0x80281b24;
+setTimer = 0x8014836c;
+here = 0x8024f874;
+startSoundNpcActor = 0x80017eb0;
+checkDistance = 0x8021c2f0;
+startVoice = 0x8028537c;
+iWM = 0x800137aC;
+setTrackVolume = 0x800166f8;
+gunExec = 0x8024e300;
+setShineFlag = 0x802946ac;
+setBlueCoinFlag = 0x802944cc;
+setBool = 0x802948e4;
+decFlag = 0x802947d0;
+setFlag = 0x80294b1c;
+
+mpOne = 0x80273A14;
+mpTwo = 0x8024DF6C;
+mpThree = 0x8024DF28;
+mpFour = 0x80251C88;
+mpFive = 0x8025BB40;
+mpSix = 0x80251DF0;
+mpSeven = 0x80251DE4;
+mpEight = 0x8021C2A0;
+
+cOne = 0x80251498;
+cTwo = 0x8024356C;
+cThree = 0x8024e5e4;
+cFour = 0x80265960;
+cFive = 0x8026d168;
+cSix = 0x80244f8C;
+cSeven = 0x80265a3C;
+cEight = 0x80265adC;
+cNine = 0x802541D8;
+cTen = 0x8024bf30;
+cEleven = 0x8024c248;
+
+posUpdate1 = 0x802574ac;
+posUpdate2 = 0x8025749c;
+posUpdate3 = 0x802567a4;
+posUpdate4 = 0x80256794;
+
+ftOne = 0x8027fd78;
+ftTwo = 0x8027eb14;
+
+faOne = 0x8026d208;
+faTwo = 0x8026d140;
+
+yOne = 0x8024dfb8;
+yTwo = 0x8026ed30;
+yThree = 0x8026f504;
+yFour = 0x8026ffc4;
+yFive = 0x8027002C;
+ySix = 0x8026f5ec;
+ySeven = 0x8026f5dC;
+yEight = 0x8024E368;
+yNine = 0x8026F458;
+yTen = 0x80270474;
+
+ssOne = 0x8026c374;
+ssTwo = 0x8026c6b4;
+ssThree = 0x8026c3bc;
+
+hjOne = 0x80281b18;
+hjTwo = 0x80243328;
+hjTwoTwo = 0x8024332C;
+hjThree = 0x80282648;
+
+csOne = 0x80299230;
+
+startAppearTimer = 0x8014afcc;
+startDisappearTimer = 0x8014b1d8;
+OSCheckStopwatch = 0x80348114;
+startMoveTimer = 0x80147568;
+stopMoveTimer = 0x80147550;
+loserExec = 0x802430fc;
+
+mOF = 0x80250518;
+
+cMF1 = 0x802320E4;
+cMF2 = 0x802DDB18;
+cMF3 = 0x802dd83C;

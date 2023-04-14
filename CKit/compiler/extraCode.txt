@@ -1,0 +1,25 @@
+$prevent gadget insertion of water mirror reflection 
+0418a144 60000000
+$crash handler moment
+0429d088 60000000
+0429d098 60000000
+$only can open menu if no other buttons are pressed
+04297a70 80030018
+04297a74 2c001000
+04297a78 4082057c
+$temporary remove model mirroring fix
+041930a4 4e800020
+
+$water always sprays despite mario distance
+0427ebdc 4800000c
+
+$fix arg number crap
+0428e9c8 60000000
+0428e854 60000000
+0428e624 60000000
+
+$ branch after allowShineDecrement()
+041482dc 48000070
+
+$ nop after allowBlueDecrement()
+041475c4 60000000
