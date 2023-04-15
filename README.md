@@ -4,7 +4,7 @@ This is a repository that contains the python-based GUI and sunshine c-kit sourc
 **Here's how you can compile the c-kit source code:**
   1. Install [devKitPPC](https://github.com/devkitPro/installer/releases). 
   2. Add a vanilla SMS main.dol (USA version) into the compiler folder. If you don't know how to get this, here's a quick overview:
-    a. Obtain a USA SMS iso or other disc image type (I can't help you with how to obtain this, but you probably already have one if you're following this tutorial).
+  	a. Obtain a USA SMS iso or other disc image type (I can't help you with how to obtain this, but you probably already have one if you're following this tutorial).
     b. Open Dolphin Emulator (which I assume you already have, but install it if you don't) and go to Config->Paths
     c. Add the path to the folder that your USA SMS iso is in if you haven't already
     d. Go back to the main Dolphin screen, and now you should be able to see Super Mario Sunshine listed. Right click it and go to Properties->Filesystem.
