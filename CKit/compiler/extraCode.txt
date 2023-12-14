@@ -23,3 +23,9 @@ $ branch after allowShineDecrement()
 
 $ nop after allowBlueDecrement()
 041475c4 60000000
+
+$ reduce memory allocated to mario
+0429d7e4 38600574
+
+$ branch past param section of TMario
+04276d48 48004934
