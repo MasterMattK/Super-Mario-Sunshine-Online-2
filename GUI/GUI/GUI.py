@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
     chat = Signal(str)
     hm = Signal(str)
 
-    VERSION = '2.1' # I'm leaving it as a string just in case we ever have something like '2.2a' with a letter in it
+    VERSION = '2.2 Beta' # I'm leaving it as a string just in case we ever have something like '2.2a' with a letter in it
 
     def __init__(self) -> None:
         super().__init__()
