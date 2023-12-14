@@ -27,5 +27,7 @@ del tag.c.o
 del tag.c.s
 del yoshi.c.o
 del yoshi.c.s
+del params.c.o
+del params.c.s
 
 pause
