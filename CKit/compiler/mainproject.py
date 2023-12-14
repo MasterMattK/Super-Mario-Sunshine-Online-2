@@ -33,7 +33,7 @@ p.add_file("../source/tag.c")
 p.add_file("../source/fludd.c")
 p.add_file("../source/yoshi.c")
 p.add_file("../source/marioInteraction.c")
-p.add_file("../source/params.c")
+#p.add_file("../source/params.c")
 #p.add_file("../source/spectate.c")
 
 p.add_linker_file("../galaxySymbols.txt")

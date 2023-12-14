@@ -9,8 +9,8 @@ u32********* marios[realpNum] = { [0 ... (realpNum-1)] = -1 };
 int* newMarioParams;
 
 u32* makeMarios(u32* mario) {
-	newMarioParams = alloc(0x3d1c);
-	ct_MarioParams(newMarioParams);
+	//newMarioParams = alloc(0x3d1c);
+	//ct_MarioParams(newMarioParams);
 
 	// this makes it so only 1 mario can spawn on file select
 	char* bob = SDAword(-0x6048);
@@ -66,11 +66,11 @@ void __attribute__((noinline)) load_MarioMFLR(u32* mario, u32* unk) {
 }
 
 // replace gpThrowPower with a reference to newMarioParams
-void replace_gpThrowPower() {
+/*void replace_gpThrowPower() {
 	SDAstoreword(-0x6090, newMarioParams + 0x2AC/4);
-}
+}*/
 
-void ct_MarioParams(u32** this) {
+/*void ct_MarioParams(u32** this) {
 	// the prm file path strings are gotten relative to one of these addresses
 	char *prmStrBasePointer = 0x8039fe80;
 	char *r2 = 0x80416ba0;
@@ -2536,4 +2536,4 @@ void ct_MarioParams(u32** this) {
 	TBaseParam(this + 0x3d08/4, this + 0x3cd8/4, calcKeyCode(r2 - 0xa84), r2 - 0xa84);
 	this[0x3d08 / 4] = 0x803abd30;
 	this[0x3d18 / 4] = 0;
-}
+}*/
