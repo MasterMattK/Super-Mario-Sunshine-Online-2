@@ -776,5 +776,8 @@ p.branch(0x802855b8, "paramsReplace_animSound_802855b8")
 p.branch(0x802856dc, "paramsReplace_animSound_802856dc")
 p.branch(0x802856ec, "paramsReplace_animSound_802856ec")"""
 
-p.build("D:\\EVERYTHING\\Projects\\Multiplayer\\SMSO CKit\\dol\\main.dol")
+with open(".\\dol_path.txt", "r") as f:
+    dol_path = f.readline()
+
+p.build(dol_path)
 
