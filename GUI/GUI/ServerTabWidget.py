@@ -123,6 +123,7 @@ class ServerActionsTab(QScrollArea):
         self.gamemode_combobox = QComboBox()
         self.gamemode_combobox.addItem("Cooperative Play")
         self.gamemode_combobox.addItem("Tag/Hide'n'Seek")
+        self.gamemode_combobox.addItem("Manhunt")
         self.gamemode_layout.addWidget(self.gamemode_label, 5, 0)
         self.gamemode_layout.addWidget(self.gamemode_combobox, 5, 1, 1, 4)
 
@@ -175,6 +176,34 @@ class ServerActionsTab(QScrollArea):
         self.tag_widget.setLayout(self.tag_layout)
         self.gamemode_stack.addWidget(self.tag_widget)
 
+        # manhunt 
+        self.hunter_label = QLabel("Hunters")
+        self.hunter_list = TagListWidget()      # reusing widget from tag
+        self.runner_label = QLabel("Runner")
+        self.runner_list = TagListWidget()      # reusing widget from tag
+        self.hunter_list.setDragDropMode(QAbstractItemView.DragDrop)
+        self.runner_list.setDragDropMode(QAbstractItemView.DragDrop)
+        self.hunter_list.setDefaultDropAction(Qt.MoveAction)
+        self.runner_list.setDefaultDropAction(Qt.MoveAction)
+        self.manhunt_stack = QStackedWidget()
+        self.start_manhunt_button = QPushButton("Start Manhunt")
+        self.stop_manhunt_button = QPushButton("Stop Manhunt")
+        self.manhunt_stack.addWidget(self.start_manhunt_button)
+        self.manhunt_stack.addWidget(self.stop_manhunt_button)
+        self.reset_manhunt_button = QPushButton("Reset Manhunt")
+
+        self.manhunt_layout = QGridLayout()
+        self.manhunt_layout.addWidget(self.hunter_label, 0, 0, 1, 2, alignment=Qt.AlignCenter)
+        self.manhunt_layout.addWidget(self.runner_label, 0, 2, 1, 2, alignment=Qt.AlignCenter)
+        self.manhunt_layout.addWidget(self.hunter_list, 1, 0, 1, 2)
+        self.manhunt_layout.addWidget(self.runner_list, 1, 2, 1, 2)
+        self.manhunt_layout.addWidget(self.manhunt_stack, 2, 0, 1, 2)
+        self.manhunt_layout.addWidget(self.reset_manhunt_button, 2, 2, 1, 2)
+        self.manhunt_widget = QWidget()
+        self.manhunt_widget.setLayout(self.manhunt_layout)
+        self.gamemode_stack.addWidget(self.manhunt_widget)
+
+        # connecting signals and slots
         self.gamemode_combobox.activated.connect(self.on_gamemode_changed)
         self.sync_flags_checkbutton.clicked.connect(self.on_sync_flags_toggled)
         self.reset_flags_button.clicked.connect(self.on_reset_flags_clicked)

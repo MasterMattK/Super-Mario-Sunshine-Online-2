@@ -1,7 +1,6 @@
-// This file is responsible for all of the functions that deal with the tag gamemode
+// This file is responsible for all of the functions that deal with the manhunt gamemode
 #include "defines.h"
 
-int gamemode = 0;
 int clientTagTime = 0;
 int savedFlags = 0;
 bool isTagger = false, isTimerOnscreen = false, connected = false, previouslyConnected = false, tagBool = false, fluddRefills = false, tagReset = false;

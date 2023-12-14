@@ -71,6 +71,7 @@ class ConsoleTypes(Enum):
 class GamemodeTypes(Enum):
     DEFAULT = 0
     TAG = 1
+    MANHUNT = 2
 
     @staticmethod
     def get_gamemode_from_num(num: int):
@@ -84,6 +85,12 @@ class TagStatus(Enum):
     HIDER = 0
     PENDING_TAGGER = 1
     TAGGER = 2
+    SPECTATOR = 3
+
+class ManhuntStatus(Enum):
+    RUNNER = 0
+    PENDING_HUNTER = 1  # probably don't need this?
+    HUNTER = 2
     SPECTATOR = 3
 
 class ConfigTypes(Enum):
