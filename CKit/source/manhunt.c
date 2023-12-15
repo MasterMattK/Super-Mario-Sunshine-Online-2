@@ -1,7 +1,7 @@
 // This file is responsible for all of the functions that deal with the manhunt gamemode
 #include "defines.h"
 
-bool isHunter = true, manhuntBool = false, manhuntReset = false;
+bool isHunter = false, manhuntBool = false, manhuntReset = false;
 
 // function prototypes (the first 2 are for in-game funcs)
 int checkDistance(float* xyz1, float* xyz2, float one, float two, float three, float four);

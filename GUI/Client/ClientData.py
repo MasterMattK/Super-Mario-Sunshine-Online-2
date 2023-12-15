@@ -4,7 +4,7 @@ import json
 
 from Client.InGameVars import InGameVars
 from Client.DolphinMemoryLib import Dolphin
-from Misc.DataTypes import ServerRcvDataTypes, TagStatus
+from Misc.DataTypes import ServerRcvDataTypes, TagStatus, ManhuntStatus
 
 # class stored on client to keep track of other players
 class Player:
@@ -14,6 +14,7 @@ class Player:
         self.username = f"Player{index}"
         self.model = "mario"
         self.tag_status = TagStatus.HIDER
+        self.manhunt_status = ManhuntStatus.RUNNER
 
 # this class is what reads and sets all of the client's values every frame to send to the server
 # this is always called on the send thread

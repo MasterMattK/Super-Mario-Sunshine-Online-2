@@ -65,7 +65,7 @@ class Client(QObject):
         self.level_data = LevelData()
         self.gamemode = GamemodeTypes.DEFAULT.value
         self.tag_status = TagStatus.HIDER.value
-        self.manhunt_status = ManhuntStatus.HUNTER.value
+        self.manhunt_status = ManhuntStatus.RUNNER.value
         self.allow_tps = True
         self.allow_level_changes = True
 
