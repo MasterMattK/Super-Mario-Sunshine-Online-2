@@ -12,7 +12,7 @@ from Client.DolphinMemoryLib import Dolphin
 from Client.InGameVars import InGameVars
 from Client.ClientData import Player, ClientData, ClientPointers, DummyPointers, FlagData
 from Misc.Network import NetworkClient
-from Misc.DataTypes import ClientRcvDataTypes, ServerRcvDataTypes, DisconnectSource, ConsoleTypes, GamemodeTypes, TagStatus
+from Misc.DataTypes import ClientRcvDataTypes, ServerRcvDataTypes, DisconnectSource, ConsoleTypes, GamemodeTypes, TagStatus, ManhuntStatus
 from Misc.LevelData import LevelData
 
 class Client(QObject):
@@ -65,6 +65,7 @@ class Client(QObject):
         self.level_data = LevelData()
         self.gamemode = GamemodeTypes.DEFAULT.value
         self.tag_status = TagStatus.HIDER.value
+        self.manhunt_status = ManhuntStatus.HUNTER.value
         self.allow_tps = True
         self.allow_level_changes = True
 
@@ -90,7 +91,10 @@ class Client(QObject):
             ClientRcvDataTypes.RESET_TAG.value: self.on_reset_tag,
             ClientRcvDataTypes.TOGGLE_REFILLS.value: self.on_toggle_refills,
             ClientRcvDataTypes.ALLOW_TPS.value: self.on_allow_tps,
-            ClientRcvDataTypes.ALLOW_LVL_CHANGES.value: self.on_allow_level_changes
+            ClientRcvDataTypes.ALLOW_LVL_CHANGES.value: self.on_allow_level_changes,
+            ClientRcvDataTypes.MANHUNT_STATUS.value: self.on_manhunt_status,
+            ClientRcvDataTypes.START_MANHUNT.value: self.on_start_manhunt,
+            ClientRcvDataTypes.RESET_MANHUNT.value: self.on_reset_manhunt
         }
 
         self.send_thread = Thread(target=self.client_send_loop)
@@ -645,7 +649,6 @@ class Client(QObject):
     def on_reset_tag(self, data: dict, event: enet.Event) -> None:
         self.console_msg.emit("The server has reset tag!", ConsoleTypes.INFO)
         self.memory.write_u8(InGameVars.TAG_RESET, 1)
-        self.console_msg.emit("The current tag game has been reset by the server!", ConsoleTypes.INFO)
 
     def on_toggle_refills(self, data: dict, event: enet.Event) -> None:
         self.memory.write_u8(InGameVars.FLUDD_REFILLS, data.disable)
@@ -671,6 +674,27 @@ class Client(QObject):
         else:
             self.console_msg.emit("Level changes for clients have been turned off!", ConsoleTypes.INFO)
             self.allow_level_changes_sig.emit(False)
+
+    def on_manhunt_status(self, data: dict, event: enet.Event) -> None:
+        self.manhunt_status = data.manhunt_status
+        if data.manhunt_status == ManhuntStatus.HUNTER.value:
+            self.console_msg.emit("The server has made you a hunter!", ConsoleTypes.INFO)
+            self.memory.write_u8(InGameVars.IS_HUNTER, 1)
+        elif data.manhunt_status == ManhuntStatus.RUNNER.value:
+            self.console_msg.emit("The server has made you a runner!", ConsoleTypes.INFO)
+            self.memory.write_u8(InGameVars.IS_HUNTER, 0)
+
+    def on_start_manhunt(self, data: dict, event: enet.Event) -> None:
+        if data.start:
+            self.console_msg.emit("The server has started manhunt!", ConsoleTypes.INFO)
+            self.memory.write_u8(InGameVars.MANHUNT_BOOL, 1)
+        else:
+            self.console_msg.emit("The server has stopped manhunt!", ConsoleTypes.INFO)
+            self.memory.write_u8(InGameVars.MANHUNT_BOOL, 0)
+
+    def on_reset_manhunt(self, data: dict, event: enet.Event) -> None:
+        self.console_msg.emit("The server has reset manhunt!", ConsoleTypes.INFO)
+        self.memory.write_u8(InGameVars.MANHUNT_RESET, 1)
 
     # in case of some packet corruption or some huge bug where a packet's dataType value is unknown, this function is called instead
     def on_unknown(self, data: dict, event: enet.Event) -> None:

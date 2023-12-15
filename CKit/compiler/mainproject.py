@@ -33,6 +33,7 @@ p.add_file("../source/tag.c")
 p.add_file("../source/fludd.c")
 p.add_file("../source/yoshi.c")
 p.add_file("../source/marioInteraction.c")
+p.add_file("../source/manhunt.c")
 #p.add_file("../source/spectate.c")
 
 p.add_linker_file("../galaxySymbols.txt")
@@ -143,6 +144,8 @@ p.branchlink(0x802821a8, "stopRefill30")
 #p.branchlink(0x8026a23c, "stopRefill31")
 #p.branchlink(0x8026a284, "stopRefill31")
 #p.branchlink(0x8024ec2c, "stopRefill31")
+
+p.branch(0x80253220, "manhuntMain")
 
 with open(".\\dol_path.txt", "r") as f:
     dol_path = f.readline()

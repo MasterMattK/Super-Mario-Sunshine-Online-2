@@ -282,11 +282,12 @@ void tagRespawnEpisodeSecret(u8* nextStage) {
 
 // if tag is the gamemode, mario deaths don't decrease the 1up count
 void freezeLives() {
-	if (gamemode != 1) {
+	if (gamemode != 1 && gamemode != 2) { // move to gamemode.c later
 		__asm("stw 0, 0x0078 (3)");
 	}
 }
 
+// rename this in the future
 void checkForTagger(u32* mario) {
 	if (fluddRefills && !isTagger && tagBool) {
 		int currentFlags = mario[0x118 / 4];

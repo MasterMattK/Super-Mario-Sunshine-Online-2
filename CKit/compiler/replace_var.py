@@ -3,7 +3,7 @@ scriptDir = "..\\..\\GUI\\Client\\InGameVars.py"   # specify which file the vars
 varsToGet = [("gamemode", "GAMEMODE"), ("tagBool", "TAG_BOOL"), ("isTagger", "IS_TAGGER"), ("clientTagTime", "CLIENT_TAG_TIME"),  
 	("connected", "CONNECTED"), ("marios", "MARIOS"), ("bmdPointers", "BMD_POINTERS"), ("modelIndex", "MODEL_INDEX"), ("musicVolume", "MUSIC_VOLUME"), 
 	("fluddRefills", "FLUDD_REFILLS"), ("currentTime", "CURRENT_TIME"), ("flagToUpdate", "FLAG_TO_UPDATE"), ("bResetFlags", "RESET_FLAGS"),
-	("tagReset", "TAG_RESET")]  # specify which var addresses to look for, and what to name them in the script
+	("tagReset", "TAG_RESET"), ("manhuntBool", "MANHUNT_BOOL"), ("isHunter", "IS_HUNTER"), ("manhuntReset", "MANHUNT_RESET")]  # specify which var addresses to look for, and what to name them in the script
 
 with open(mapDir) as m:
     mapLines = m.readlines()

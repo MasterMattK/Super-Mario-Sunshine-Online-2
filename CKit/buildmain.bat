@@ -27,5 +27,7 @@ del tag.c.o
 del tag.c.s
 del yoshi.c.o
 del yoshi.c.s
+del manhunt.c.o
+del manhunt.c.s
 
 pause

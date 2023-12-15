@@ -347,7 +347,6 @@ class ServerActionsTab(QScrollArea):
         self.hunter_list.clear()
         self.hunter_list.addItems(new_hunter_list)
 
-
         # for manhunt
         new_runner_list = []
         for i in range(self.runner_list.count()):
