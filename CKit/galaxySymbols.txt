@@ -96,3 +96,5 @@ mOF = 0x80250518;
 cMF1 = 0x802320E4;
 cMF2 = 0x802DDB18;
 cMF3 = 0x802dd83C;
+
+floorDamageExec = 0x8024303c;

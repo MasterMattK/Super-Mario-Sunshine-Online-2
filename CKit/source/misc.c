@@ -9,12 +9,21 @@ bool bResetFlags = false;
 // updates the currentTimeSec variable every 1/4 frame
 void updateSeconds()
 {
-	static int repeat = 1;
-	if (repeat % 4 == 0)
-	{
-		currentTime++;
-		repeat = 1;
-	} else repeat++;
+	static int repeat = 0;
+    
+    u32** TMario = 0x8040E0E8;
+    u32 realM3UModelMario = TMario[0][0x3A8 / 4];
+    u32 currentM3UModelMario = fromRegister(31);
+
+    // we only want to increment with the original mario
+    if (realM3UModelMario != currentM3UModelMario)
+        return;
+
+    if (repeat == 120)
+    {
+        currentTime++;
+        repeat = 0;
+    } else repeat++;
 }
 
 // this function sets a part of the dummy marios' controller memory to 0, which makes them able to sleep

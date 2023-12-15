@@ -2,9 +2,11 @@
 #include "defines.h"
 
 bool isHunter = false, manhuntBool = false, manhuntReset = false;
+unsigned int cooldown = 0, cooldownStarted = 0;
 
 // function prototypes (the first 2 are for in-game funcs)
 int checkDistance(float* xyz1, float* xyz2, float one, float two, float three, float four);
+void floorDamageExec(int *mario, int damage, int type, int emitcount, int tremble);
 
 // this function branches to all of the manhunt functions that need to run every frame
 void manhuntMain() {
@@ -43,8 +45,9 @@ void manhunt_checkIfTagged() {
             // checkDistance is an in-game function that sees if 2 hitboxes are colliding. I send in the positions
             // of the marios, as well as the dimensions of the hitboxes (radius and height) to see if they are colliding.
             // I also make sure that your mario isn't already in the dying state before continuing
-			if (checkDistance(mario_pos, realMario_pos, 120, 90, 82, 170) == 1 && realMario[0x7C / 4] != 0x20467) {
-				loserExec(realMario);   // this is the kill function
+			if (checkDistance(mario_pos, realMario_pos, 120, 90, 82, 170) == 1 && realMario[0x7C / 4] != 0x20467 && !isInCooldown()) {
+				floorDamageExec(realMario, 2, 3, 0, 0xf);
+				setCooldown(2);
 			}
 		}
 	}
@@ -67,4 +70,17 @@ void checkHunterFlags() {
 		mario[0x119] = shirtFlag;
 		marioCap[0x5] = 1;
 	}
+}
+
+void setCooldown(int time) {
+	cooldown = time;
+	cooldownStarted = currentTime;
+}
+
+int isInCooldown() {
+	if (currentTime - cooldown >= cooldownStarted) {
+		return false;
+	}
+	else
+		return true;
 }

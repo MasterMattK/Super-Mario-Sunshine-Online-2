@@ -5,6 +5,7 @@
 extern int pNum;
 extern unsigned int********* marios[realpNum];
 extern int gamemode;
+extern unsigned int currentTime;
 
 #define SDA 0x803e4d20
 
