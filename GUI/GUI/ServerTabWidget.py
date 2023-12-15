@@ -176,7 +176,7 @@ class ServerActionsTab(QScrollArea):
         self.tag_widget.setLayout(self.tag_layout)
         self.gamemode_stack.addWidget(self.tag_widget)
 
-        # manhunt 
+        # manhunt stuff
         self.hunter_label = QLabel("Hunters")
         self.hunter_list = TagListWidget()      # reusing widget from tag
         self.runner_label = QLabel("Runner")
@@ -213,6 +213,11 @@ class ServerActionsTab(QScrollArea):
         self.stop_tag_button.clicked.connect(lambda: self.command.emit("/tag stop"))
         self.reset_tag_button.clicked.connect(self.on_reset_tag_clicked)
         self.disable_refills_checkbutton.clicked.connect(self.on_disable_refills_toggled)
+        self.hunter_list.newUsernameDropped.connect(lambda username: self.command.emit(f"/manhunt add {username}"))
+        self.runner_list.newUsernameDropped.connect(lambda username: self.command.emit(f"/manhunt remove {username}"))
+        self.start_manhunt_button.clicked.connect(lambda: self.command.emit("/manhunt start"))
+        self.stop_manhunt_button.clicked.connect(lambda: self.command.emit("/manhunt stop"))
+        self.reset_manhunt_button.clicked.connect(self.on_reset_manhunt_clicked)
 
     def on_flags_edited(self) -> None:
         if self.sync_flags_label.text().startswith("*"):
@@ -303,6 +308,12 @@ class ServerActionsTab(QScrollArea):
             self.command.emit("/tag refills off")
         else:
             self.command.emit("/tag refills on")
+
+    def on_reset_manhunt_clicked(self) -> None:
+        result = PopUpBox.display("Are you sure you want to reset this game of manhunt?", 
+                         PopUpBoxTypes.CONFIRM)
+        if result == QMessageBox.Yes:
+            self.command.emit("/manhunt reset")
     
     def update_username_models(self, username_list: list) -> None:
         self.username_and_all_model.clear()
@@ -327,12 +338,33 @@ class ServerActionsTab(QScrollArea):
             if item in username_list:
                 new_hider_list.append(item)
 
+        # for manhunt
+        new_hunter_list = []
+        for i in range(self.hunter_list.count()):
+            item = self.hunter_list.item(i).text()
+            if item in username_list:
+                new_hunter_list.append(item)
+        self.hunter_list.clear()
+        self.hunter_list.addItems(new_hunter_list)
+
+
+        # for manhunt
+        new_runner_list = []
+        for i in range(self.runner_list.count()):
+            item = self.runner_list.item(i)
+            if item in username_list:
+                new_runner_list.append(item)
+
         for item in username_list:
             if item not in new_tagger_list and item not in new_hider_list:
                 new_hider_list.append(item)
+            if item not in new_hunter_list and item not in new_runner_list:
+                new_runner_list.append(item)
 
         self.hider_list.clear()
-        self.hider_list.addItems(new_hider_list)
+        self.hider_list.addItems(new_runner_list)
+        self.runner_list.clear()
+        self.runner_list.addItems(new_runner_list)
 
         self.teleport_user_combobox.setCurrentIndex(0)
         self.teleport_destination_combobox.setCurrentIndex(0)
@@ -372,4 +404,22 @@ class ServerActionsTab(QScrollArea):
             if item.text() == username:
                 self.hider_list.takeItem(i)
                 self.tagger_list.addItem(username)
+                break
+    
+    # Manhunt related
+    def on_set_runner(self, username: str) -> None:
+        for i in range(self.hunter_list.count()):
+            item = self.hunter_list.item(i)
+            if item.text() == username:
+                self.hunter_list.takeItem(i)
+                self.runner_list.addItem(username)
+                break
+
+    # Manhunt related
+    def on_set_hunter(self, username: str) -> None:
+        for i in range(self.runner_list.count()):
+            item = self.runner_list.item(i)
+            if item.text() == username:
+                self.runner_list.takeItem(i)
+                self.hunter_list.addItem(username)
                 break

@@ -2,7 +2,7 @@ from threading import Lock
 from bitarray import bitarray
 import json
 
-from Misc.DataTypes import ClientRcvDataTypes, TagStatus
+from Misc.DataTypes import ClientRcvDataTypes, TagStatus, ManhuntStatus
 
 # class stored on server to keep track of incoming peers
 class Player:
@@ -14,6 +14,7 @@ class Player:
         self.model = "mario"
         self.tag_status = TagStatus.HIDER
         self.flags_paused = False
+        self.manhunt_status = ManhuntStatus.HUNTER
 
 # class stored on the server to sync incoming flag data from the clients
 class FlagSync:

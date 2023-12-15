@@ -6,7 +6,7 @@ import enet
 
 from Server.ServerData import FlagSync, Player
 from Misc.Network import NetworkServer
-from Misc.DataTypes import ClientRcvDataTypes, ServerRcvDataTypes, DisconnectSource, ConsoleTypes, GamemodeTypes, TagStatus
+from Misc.DataTypes import ClientRcvDataTypes, ServerRcvDataTypes, DisconnectSource, ConsoleTypes, GamemodeTypes, TagStatus, ManhuntStatus
 from Misc.LevelData import LevelData
 
 class Server(QObject):
@@ -20,6 +20,10 @@ class Server(QObject):
     tag_stopped = Signal()
     set_hider = Signal(str)
     set_tagger = Signal(str)
+    manhunt_started = Signal()
+    manhunt_stopped = Signal()
+    set_runner = Signal(str)
+    set_hunter = Signal(str)
 
     def __init__(self, ip: str, port: int, player_num: int, sync_flags: bool, disable_refills: bool, version: str) -> None:
         super().__init__()
@@ -41,6 +45,7 @@ class Server(QObject):
         self.tag_running = False
         self.allow_tps = False
         self.allow_level_changes = False
+        self.manhunt_running = False
 
         # this is essentially used like a switch statement
         self.receive_opts = {
@@ -54,7 +59,8 @@ class Server(QObject):
             ServerRcvDataTypes.TP_REQUEST.value: self.on_tp_request,
             ServerRcvDataTypes.CHANGE_LEVEL.value: self.on_change_level,
             ServerRcvDataTypes.TAG_STATUS.value: self.on_tag_status,
-            ServerRcvDataTypes.FLAGS_PAUSED.value: self.on_flags_paused
+            ServerRcvDataTypes.FLAGS_PAUSED.value: self.on_flags_paused,
+            ServerRcvDataTypes.MANHUNT_STATUS.value: self.on_manhunt_status
         }
 
         # each object represents a player.
@@ -128,6 +134,41 @@ class Server(QObject):
         self.tag_running = False
         self.console_msg.emit("Tag stopped!", ConsoleTypes.INFO)
         self.tag_stopped.emit()
+
+    def start_manhunt(self) -> None:
+        connected_players = [player for player in self.player_data if player.connected]
+
+        if not connected_players:
+            self.manhunt_stopped.emit()
+            self.console_msg.emit("You can't start manhunt without any players connected!", ConsoleTypes.ERROR)
+            return
+
+        if not ManhuntStatus.RUNNER in [player.manhunt_status for player in connected_players]:
+            self.manhunt_stopped.emit()
+            self.console_msg.emit("You can't start manhunt without a runner!", ConsoleTypes.ERROR)
+            return
+
+        if not ManhuntStatus.HUNTER in [player.manhunt_status for player in connected_players]:
+            self.manhunt_stopped.emit()
+            self.console_msg.emit("You can't start manhunt without any hunters!", ConsoleTypes.ERROR)
+            return
+        
+        data = {'dataType': ClientRcvDataTypes.START_MANHUNT.value, 'start': True}
+        for peer in self.network.host.peers:
+            self.network.send(json.dumps(data), peer)
+
+        self.manhunt_running = True
+        self.console_msg.emit("Manhunt started!", ConsoleTypes.INFO)
+        self.manhunt_started.emit()
+
+    def stop_manhunt(self) -> None:
+        data = {'dataType': ClientRcvDataTypes.START_MANHUNT.value, 'start': False}
+        for peer in self.network.host.peers:
+            self.network.send(json.dumps(data), peer)
+
+        self.manhunt_running = False
+        self.console_msg.emit("Manhunt stopped!", ConsoleTypes.INFO)
+        self.manhunt_stopped.emit()
 
     def server_receive(self) -> None:
         while self.running:
@@ -299,6 +340,15 @@ class Server(QObject):
             self.set_tagger.emit(self.player_data[event.peer.incomingPeerID].username)
             tag_status_data = {'dataType': ClientRcvDataTypes.TAG_STATUS.value, 'tag_status': TagStatus.TAGGER.value}
             self.network.send(json.dumps(tag_status_data), event.peer)
+
+    def on_manhunt_status(self, data: dict, event: enet.Event) -> None:
+        self.player_data[event.peer.incomingPeerID].manhunt_status = ManhuntStatus.HUNTER
+
+        # check to see if this is the last hider to be found
+        if not self.check_manhunt_end():
+            self.set_hunter.emit(self.player_data[event.peer.incomingPeerID].username)
+            manhunt_status_data = {'dataType': ClientRcvDataTypes.MANHUNT_STATUS.value, 'manhunt_status': ManhuntStatus.HUNTER.value}
+            self.network.send(json.dumps(manhunt_status_data), event.peer)
 
     # once all clients confirm their flags are paused, we're free to reset them all
     def on_flags_paused(self, data: dict, event: enet.Event) -> None:
@@ -485,6 +535,58 @@ class Server(QObject):
         for peer in self.network.host.peers:
             self.network.send(json.dumps(disable_refills_data), peer, reliable=True)
 
+    # Manhunt related
+    def on_new_hunter_sig(self, username: str):
+        for player in self.player_data:
+            if player.username.lower() == username.lower() and player.connected:
+                player.manhunt_status = ManhuntStatus.HUNTER
+
+                if not self.check_manhunt_end():
+                    peer = self.network.get_peer(player.peer_id)
+                    data = {'dataType': ClientRcvDataTypes.MANHUNT_STATUS.value, 'manhunt_status': ManhuntStatus.HUNTER.value}
+                    self.network.send(json.dumps(data), peer)
+                    self.set_hunter.emit(player.username)
+                    self.console_msg.emit(f"{player.username} has been added to the hunter team! [PLACEHOLDER MSG]", ConsoleTypes.INFO)
+
+                return
+        else:
+            self.console_msg.emit(f"{username} is not a valid username!", ConsoleTypes.ERROR)
+
+    # Manhunt related
+    def on_new_runner_sig(self, username: str):
+        for player in self.player_data:
+            if player.username.lower() == username.lower() and player.connected:
+                player.manhunt_status = ManhuntStatus.RUNNER
+
+                if not self.check_manhunt_end():
+                    peer = self.network.get_peer(player.peer_id)
+                    data = {'dataType': ClientRcvDataTypes.MANHUNT_STATUS.value, 'manhunt_status': ManhuntStatus.RUNNER.value}
+                    self.network.send(json.dumps(data), peer)
+                    self.set_runner.emit(player.username)
+                    self.console_msg.emit(f"{player.username} has been added to the runner team! [PLACEHOLDER MSG]", ConsoleTypes.INFO)
+
+                return
+        else:
+            self.console_msg.emit(f"{username} is not a valid username!", ConsoleTypes.ERROR)
+
+    # Manhunt related
+    def on_manhunt_reset_sig(self) -> None:
+        reset_manhunt_data = {'dataType': ClientRcvDataTypes.RESET_MANHUNT.value}
+        for peer in self.network.host.peers:
+            self.network.send(json.dumps(reset_manhunt_data), peer)
+
+        for player in self.player_data:
+            if player.connected:
+                player.manhunt_status = ManhuntStatus.RUNNER
+                self.set_runner.emit(player.username)
+
+        manhunt_status_data = {'dataType': ClientRcvDataTypes.MANHUNT_STATUS.value, 'manhunt_status': ManhuntStatus.RUNNER.value}
+        for peer in self.network.host.peers:
+            self.network.send(json.dumps(manhunt_status_data), peer)
+
+        self.console_msg.emit("The current manhunt game has been reset! [PLACEHOLDER MSG]", ConsoleTypes.INFO)
+        self.manhunt_stopped.emit()
+
     # Validates that a username isn't duplicated
     def check_username(self, username: str) -> str:
         current_usernames_list = [player.username for player in self.player_data if player.connected == True]
@@ -517,6 +619,24 @@ class Server(QObject):
             tag_status_data = {'dataType': ClientRcvDataTypes.TAG_STATUS.value, 'tag_status': TagStatus.HIDER.value}
             for peer in self.network.host.peers:
                 self.network.send(json.dumps(tag_status_data), peer)
+            
+            return True
+        else:
+            return False
+        
+    def check_manhunt_end(self) -> bool:
+        if self.manhunt_running and ([player.manhunt_status for player in self.player_data if player.connected].count(ManhuntStatus.RUNNER) == 0 or
+            [player.manhunt_status for player in self.player_data if player.connected].count(ManhuntStatus.HUNTER) == 0):
+            self.stop_manhunt()
+
+            for player in self.player_data:
+                if player.connected:
+                    player.manhunt_status = ManhuntStatus.RUNNER
+                    self.set_hider.emit(player.username)
+
+            manhunt_status_data = {'dataType': ClientRcvDataTypes.MANHUNT_STATUS.value, 'manhunt_status': ManhuntStatus.RUNNER.value}
+            for peer in self.network.host.peers:
+                self.network.send(json.dumps(manhunt_status_data), peer)
             
             return True
         else:

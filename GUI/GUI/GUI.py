@@ -387,6 +387,10 @@ class MainWindow(QMainWindow):
         self.server.tag_stopped.connect(lambda: self.svr_tab.tag_stack.setCurrentIndex(0))
         self.server.set_hider.connect(self.svr_tab.on_set_hider)
         self.server.set_tagger.connect(self.svr_tab.on_set_tagger)
+        self.server.manhunt_started.connect(lambda: self.svr_tab.manhunt_stack.setCurrentIndex(1))
+        self.server.manhunt_stopped.connect(lambda: self.svr_tab.manhunt_stack.setCurrentIndex(0))
+        self.server.set_runner.connect(self.svr_tab.on_set_runner)
+        self.server.set_hunter.connect(self.svr_tab.on_set_hunter)
         self.server.gamemode_change.connect(self.on_gamemode_change)
 
         self.server_commands.flags_sig.connect(self.server.on_sync_flags_sig)
@@ -406,6 +410,11 @@ class MainWindow(QMainWindow):
         self.server_commands.tag_commands.stop_sig.connect(self.server.stop_tag)
         self.server_commands.tag_commands.reset_sig.connect(self.server.on_tag_reset_sig)
         self.server_commands.tag_commands.refills_sig.connect(self.server.on_tag_refills_sig)
+        self.server_commands.manhunt_commands.add_sig.connect(self.server.on_new_hunter_sig)
+        self.server_commands.manhunt_commands.remove_sig.connect(self.server.on_new_runner_sig)
+        self.server_commands.manhunt_commands.start_sig.connect(self.server.start_manhunt)
+        self.server_commands.manhunt_commands.stop_sig.connect(self.server.stop_manhunt)
+        self.server_commands.manhunt_commands.reset_sig.connect(self.server.on_manhunt_reset_sig)
 
         self.server_thread.start()
 
