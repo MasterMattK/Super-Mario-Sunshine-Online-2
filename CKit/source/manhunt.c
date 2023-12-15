@@ -51,6 +51,9 @@ void manhunt_checkIfTagged() {
 }
 
 void checkHunterFlags() {
+	if (gamemode != 2)
+		return;
+
 	u8* mario = SDAword(-0x60D8);
 	u8 shirtFlag = mario[0x119];
 	u8* marioCap = ((u32*)mario)[0x3E0 / 4]; // mariocap is used for sunglasses

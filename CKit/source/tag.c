@@ -158,6 +158,9 @@ void checkChangeTimer() {
 }
 
 void checkTaggerFlags() {
+	if (gamemode != 1)
+		return;
+
 	u8* mario = SDAword(-0x60D8);
 	u8 shirtFlag = mario[0x119];
 	u8* marioCap = ((u32*)mario)[0x3E0 / 4]; // mariocap is used for sunglasses
