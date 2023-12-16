@@ -7,6 +7,10 @@ extern unsigned int********* marios[realpNum];
 extern int gamemode;
 extern unsigned int currentTime;
 
+// List of global functions to execute
+extern void tag_onStageLoad();
+extern void manhunt_onStageLoad();
+
 #define SDA 0x803e4d20
 
 #define ADDR_FONT 0x81693cd8

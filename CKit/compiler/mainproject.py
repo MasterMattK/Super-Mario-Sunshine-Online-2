@@ -26,6 +26,7 @@ p = Project("main.dol", address=0x80430000) # actually smaller
 p.set_osarena_patcher(patch_osarena_low)
 
 p.add_file("../source/createMarios.c")
+p.add_file("../source/callbacks.c")
 p.add_file("../source/sounds.c")
 p.add_file("../source/misc.c")
 p.add_file("../source/customModels.c")
@@ -41,6 +42,8 @@ p.apply_gecko("extraCode.txt")
 
 p.branchlink(0x8029d7f8, "makeMarios")
 p.branch(0x80276bd0, "load_MarioTrickyOverhaul")
+
+p.branch(0x80298bac, "onStageLoad")
 
 #p.branch(0x80252bac, "spectateMode")
 
@@ -115,7 +118,6 @@ p.branchlink(0x802997c4, "tagRespawnEpisode")
 p.branchlink(0x80299438, "tagRespawnStageSecret")
 p.branchlink(0x8029944c, "tagRespawnEpisodeSecret")
 p.branch(0x8029483c, "freezeLives")
-p.branch(0x80298bac, "onChangeStage")
 
 p.branchlink(0x802465e8, "mdl1")
 p.branchlink(0x802421bc, "cap1")

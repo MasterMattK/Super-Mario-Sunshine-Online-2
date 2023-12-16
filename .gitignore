@@ -6,5 +6,5 @@ config.ini
 exceptions.log
 dol_path.txt
 dol
-.c.s
-.c.o
+.s
+.o

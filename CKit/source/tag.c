@@ -216,7 +216,7 @@ bool isTimerRunning() {
 }
 
 // when a stage changes, we need to make sure this variable is set to 0
-void onChangeStage() {
+void tag_onStageLoad() {
 	isTimerOnscreen = false;
 }
 
