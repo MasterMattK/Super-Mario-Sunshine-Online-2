@@ -29,5 +29,7 @@ del yoshi.c.o
 del yoshi.c.s
 del manhunt.c.o
 del manhunt.c.s
+del callbacks.c.o
+del callbacks.c.s
 
 pause
