@@ -10,9 +10,11 @@ void floorDamageExec(int *mario, int damage, int type, int emitcount, int trembl
 
 // this function branches to all of the manhunt functions that need to run every frame
 void manhuntMain() {
+	printNumber(currentTime - cooldownStarted);
 	manhunt_checkIfReset();
 	manhunt_checkIfTagged();
 	checkHunterFlags();
+	refreshCooldownIfLoading();
 }
 
 // this function checks if a reset has been requested by the GUI
@@ -69,6 +71,14 @@ void checkHunterFlags() {
 		shirtFlag -= 0x10;
 		mario[0x119] = shirtFlag;
 		marioCap[0x5] = 1;
+	}
+}
+
+// refreshes the manhunt cooldown from loading into a stage if the runner is in the "particle load-in" state(0x1337) in order to avoid shorter effective cooldowns
+void refreshCooldownIfLoading() {
+	int *mario = SDAword(-0x60D8);
+	if (mario[0x7C / 4] == 0x00001337) {
+		setCooldown(3);
 	}
 }
 

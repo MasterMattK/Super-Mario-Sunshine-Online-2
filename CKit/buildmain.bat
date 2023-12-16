@@ -31,5 +31,7 @@ del manhunt.c.o
 del manhunt.c.s
 del callbacks.c.o
 del callbacks.c.s
+del debug.c.o
+del debug.c.s
 
 pause

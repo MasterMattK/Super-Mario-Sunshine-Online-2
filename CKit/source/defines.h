@@ -10,6 +10,8 @@ extern unsigned int currentTime;
 // List of global functions to execute
 extern void tag_onStageLoad();
 extern void manhunt_onStageLoad();
+extern void printString(char *);
+extern void printNumber(int);
 
 #define SDA 0x803e4d20
 
