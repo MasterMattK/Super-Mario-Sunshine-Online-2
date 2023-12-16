@@ -341,6 +341,7 @@ class Server(QObject):
             tag_status_data = {'dataType': ClientRcvDataTypes.TAG_STATUS.value, 'tag_status': TagStatus.TAGGER.value}
             self.network.send(json.dumps(tag_status_data), event.peer)
 
+    # PROBABLY DELETE THIS
     def on_manhunt_status(self, data: dict, event: enet.Event) -> None:
         self.player_data[event.peer.incomingPeerID].manhunt_status = ManhuntStatus.HUNTER
 

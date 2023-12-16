@@ -14,7 +14,7 @@ class Player:
         self.model = "mario"
         self.tag_status = TagStatus.HIDER
         self.flags_paused = False
-        self.manhunt_status = ManhuntStatus.HUNTER
+        self.manhunt_status = ManhuntStatus.RUNNER
 
 # class stored on the server to sync incoming flag data from the clients
 class FlagSync:
