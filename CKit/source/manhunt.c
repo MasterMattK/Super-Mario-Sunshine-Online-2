@@ -1,7 +1,7 @@
 // This file is responsible for all of the functions that deal with the manhunt gamemode
 #include "defines.h"
 
-bool isHunter = false, manhuntBool = false, manhuntReset = false;
+bool isHunter = false, manhuntActive = false, manhuntReset = false;
 unsigned int cooldown = 0, cooldownStarted = 0;
 
 // function prototypes (the first 2 are for in-game funcs)
@@ -15,19 +15,20 @@ void manhuntMain() {
 	manhunt_checkIfTagged();
 	checkHunterFlags();
 	refreshCooldownIfLoading();
+	manhunt_checkGoAppear();
 }
 
 // this function checks if a reset has been requested by the GUI
 void manhunt_checkIfReset() {
 	if (manhuntReset) {
-		manhuntBool = false;
+		manhuntActive = false;
 		manhuntReset = false;
 	}
 }
 
 // this function is what kills your mario when he is tagged
 void manhunt_checkIfTagged() {
-	if (gamemode != 2 || !manhuntBool)
+	if (gamemode != 2 || !manhuntActive)
 		return;
 
 	u32* currentMario = fromRegister(30);
@@ -97,4 +98,17 @@ int isInCooldown() {
 
 void manhunt_onStageLoad() {
 	setCooldown(3);
+}
+
+void manhunt_checkGoAppear() {
+	static previousManhuntActive = false;
+
+	if (previousManhuntActive == false && manhuntActive == true) {
+		u32 **marDirector = SDAword(-0x6048);
+		u32 *GCConsole2 = marDirector[0x74 / 4];
+		u32 ConsoleStr = GCConsole2[0x94 / 4];
+		startAppearGo(ConsoleStr);
+	}
+
+	previousManhuntActive = manhuntActive;
 }

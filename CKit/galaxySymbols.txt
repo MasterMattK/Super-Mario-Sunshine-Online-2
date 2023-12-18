@@ -101,3 +101,4 @@ floorDamageExec = 0x8024303c;
 ct_Print = 0x802cdc7c;
 initiatePrint = 0x802cddbc;
 printInternal = 0x802ce0ec;
+startAppearGo = 0x80171bb8;
