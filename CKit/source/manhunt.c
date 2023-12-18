@@ -108,6 +108,8 @@ void manhunt_checkGoAppear() {
 		u32 *GCConsole2 = marDirector[0x74 / 4];
 		u32 ConsoleStr = GCConsole2[0x94 / 4];
 		startAppearGo(ConsoleStr);
+		while (!playSound(0x4851))
+			continue;
 	}
 
 	previousManhuntActive = manhuntActive;

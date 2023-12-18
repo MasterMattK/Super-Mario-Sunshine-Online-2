@@ -4,7 +4,7 @@
 //						   singJump    doubJump    tripJump    groundPnd   dive        rollOut     wallJump    bounceJump  sideFlip    backFlip    rocketJump  turboJump
 u32 soundStateList[12] = { 0x02000880, 0x02000881, 0x00000882, 0x008008A9, 0x0080088A, 0x02000889, 0x02000886, 0x000008A4, 0x00000887, 0x00000883, 0x0000088D, 0x00000888 };
 u32 soundIdList[12] = 	 { 0x000078ab, 0x000078b1, 0x000078b6, 0x0000788f, 0x00007884, 0x000078b1, 0x000078b1, 0x000078b6, 0x000078b6, 0x000078b6, 0x000078b9, 0x000078b1 };
-u32* playSound[realpNum] = { [0 ... (realpNum-1)] = 1 };
+u32* playSoundBools[realpNum] = { [0 ... (realpNum-1)] = 1 };
 u32* previousState[realpNum] = { [0 ... (realpNum-1)] = -3 };
 
 // this function fixes the problem of some sounds not playing for dummy marios. It checks their states and calls the startVoice fucntion.
@@ -29,21 +29,21 @@ void sounds() {
 		// if the dummy mario's state has changed, it sets the corresponding playsound value to 1
 		if (previousState[marioIndex] != mario[0x7c / 4]) {
 			previousState[marioIndex] = mario[0x7c / 4];
-			playSound[marioIndex] = 1;
+			playSoundBools[marioIndex] = 1;
 		}
 
-		// if the mario's state is in the soundStateList and playSound is 1, it sends in the corresponding
+		// if the mario's state is in the soundStateList and playSoundBools is 1, it sends in the corresponding
 		// sound id to startVoice()
 		for (int i = 0; i < 12; i++) {
-			if (mario[0x7c / 4] == soundStateList[i] && playSound[marioIndex] == 1) {
+			if (mario[0x7c / 4] == soundStateList[i] && playSoundBools[marioIndex] == 1) {
 				if (soundStateList[i] == 0x0000088D) {
 					u8* TWaterGun = mario[0x3E4];
 					if (TWaterGun[0x1C84] == 1) {
-						playSound[marioIndex] = 0;
+						playSoundBools[marioIndex] = 0;
 						startVoice(mario, soundIdList[i]);
 					}
 				} else {
-					playSound[marioIndex] = 0;
+					playSoundBools[marioIndex] = 0;
 					startVoice(mario, soundIdList[i]);
 				}
 			}
@@ -110,4 +110,18 @@ void setMusicVolume(float vol) {
 void volumeAsmRestore() {
 	__asm("lfs 0, 0x0104 (4)");
 	__asm("fmuls 0, 0, 31");
+}
+
+// plays the sound of soundId as long as the gate is open
+bool playSound(int soundId)
+{
+    int* MSound = SDAword(-0x6044);
+    bool gateOpen = gateCheck(MSound, 0);
+    if (gateOpen)
+    {
+        startSoundSystemSE(soundId, 0, 0, 0, 0);
+        return true;
+    }
+    else
+        return false;
 }

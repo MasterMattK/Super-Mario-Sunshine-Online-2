@@ -102,3 +102,5 @@ ct_Print = 0x802cdc7c;
 initiatePrint = 0x802cddbc;
 printInternal = 0x802ce0ec;
 startAppearGo = 0x80171bb8;
+startSoundSystemSE = 0x80018864;
+gateCheck = 0x800132b4;
