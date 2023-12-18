@@ -101,16 +101,19 @@ void manhunt_onStageLoad() {
 }
 
 void manhunt_checkGoAppear() {
-	static previousManhuntActive = false;
+	static bool previousManhuntActive = false;
+	static bool playStartSoundPending = false;
 
 	if (previousManhuntActive == false && manhuntActive == true) {
 		u32 **marDirector = SDAword(-0x6048);
 		u32 *GCConsole2 = marDirector[0x74 / 4];
 		u32 ConsoleStr = GCConsole2[0x94 / 4];
 		startAppearGo(ConsoleStr);
-		while (!playSound(0x4851))
-			continue;
+		playStartSoundPending = true;
 	}
+
+	if (playStartSoundPending && playSound(0x4851))
+		playStartSoundPending = false;
 
 	previousManhuntActive = manhuntActive;
 }
