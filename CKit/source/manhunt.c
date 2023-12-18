@@ -10,7 +10,7 @@ void floorDamageExec(int *mario, int damage, int type, int emitcount, int trembl
 
 // this function branches to all of the manhunt functions that need to run every frame
 void manhuntMain() {
-	printNumber(currentTime - cooldownStarted);
+	//printNumber(currentTime - cooldownStarted);
 	manhunt_checkIfReset();
 	manhunt_checkIfTagged();
 	checkHunterFlags();
