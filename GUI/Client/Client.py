@@ -631,10 +631,10 @@ class Client(QObject):
     def on_start_tag(self, data: dict, event: enet.Event) -> None:
         if data.start:
             self.console_msg.emit("The server has started tag!", ConsoleTypes.INFO)
-            self.memory.write_u8(InGameVars.TAG_BOOL, 1)
+            self.memory.write_u8(InGameVars.TAG_ACTIVE, 1)
         else:
             self.console_msg.emit("The server has stopped tag!", ConsoleTypes.INFO)
-            self.memory.write_u8(InGameVars.TAG_BOOL, 0)
+            self.memory.write_u8(InGameVars.TAG_ACTIVE, 0)
 
     def on_pause_flags(self, data: dict, event: enet.Event) -> None:
         self.pause_flags = True
@@ -687,10 +687,10 @@ class Client(QObject):
     def on_start_manhunt(self, data: dict, event: enet.Event) -> None:
         if data.start:
             self.console_msg.emit("The server has started manhunt!", ConsoleTypes.INFO)
-            self.memory.write_u8(InGameVars.MANHUNT_BOOL, 1)
+            self.memory.write_u8(InGameVars.MANHUNT_ACTIVE, 1)
         else:
             self.console_msg.emit("The server has stopped manhunt!", ConsoleTypes.INFO)
-            self.memory.write_u8(InGameVars.MANHUNT_BOOL, 0)
+            self.memory.write_u8(InGameVars.MANHUNT_ACTIVE, 0)
 
     def on_reset_manhunt(self, data: dict, event: enet.Event) -> None:
         self.console_msg.emit("The server has reset manhunt!", ConsoleTypes.INFO)
@@ -806,7 +806,7 @@ class Client(QObject):
     def handle_tag(self) -> None:
         # request to become tagger if mario has died
         clt = ClientPointers(self.memory)
-        if self.memory.read_u8(InGameVars.TAG_BOOL) == 1 and self.tag_status == TagStatus.HIDER.value and clt.gameState == 7:
+        if self.memory.read_u8(InGameVars.TAG_ACTIVE) == 1 and self.tag_status == TagStatus.HIDER.value and clt.gameState == 7:
             self.tag_status = TagStatus.PENDING_TAGGER.value
             tag_status_data = {'dataType': ServerRcvDataTypes.TAG_STATUS.value, 'tag_status': TagStatus.TAGGER.value}
             self.network.send(json.dumps(tag_status_data))

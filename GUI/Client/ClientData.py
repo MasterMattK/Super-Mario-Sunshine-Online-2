@@ -73,7 +73,7 @@ class ClientData:
         # tag timer (so that the server can store your tag time in case of crash)
         self.clientTagTime = self.memory.read_u32(InGameVars.CLIENT_TAG_TIME)
         self.currentTime = self.memory.read_u32(self.pTGCConsole2 + 0x500)
-        self.tagBool = self.memory.read_u32(InGameVars.TAG_BOOL)
+        self.tagBool = self.memory.read_u32(InGameVars.TAG_ACTIVE)
 
         # fludd/yoshi have 3 spraying states: 0 = normal spraying, 1 = spam spray, 2 = no spraying(happens after spam).
         # state 1 happens too quickly for it to properly sync over the server, so we have to set that manually
