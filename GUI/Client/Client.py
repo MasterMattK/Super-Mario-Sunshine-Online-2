@@ -94,7 +94,8 @@ class Client(QObject):
             ClientRcvDataTypes.ALLOW_LVL_CHANGES.value: self.on_allow_level_changes,
             ClientRcvDataTypes.MANHUNT_STATUS.value: self.on_manhunt_status,
             ClientRcvDataTypes.START_MANHUNT.value: self.on_start_manhunt,
-            ClientRcvDataTypes.RESET_MANHUNT.value: self.on_reset_manhunt
+            ClientRcvDataTypes.RESET_MANHUNT.value: self.on_reset_manhunt,
+            ClientRcvDataTypes.MANHUNT_DMG.value: self.on_manhunt_damage
         }
 
         self.send_thread = Thread(target=self.client_send_loop)
@@ -166,6 +167,13 @@ class Client(QObject):
         for player in self.player_data:
             if player.connected == True:
                 self.update_dummy_model(player.model, self.peer_id, player.peer_id)
+
+    # called when manhunt runner takes damage
+    def send_damage_sound(self) -> None:
+        if self.is_connected:
+            data = {'dataType': ServerRcvDataTypes.MANHUNT_DMG.value}
+            self.network.send(json.dumps(data))
+            self.memory.write_u8(InGameVars.SEND_DAMAGE_SOUND, 0)
 
     # called from gui thread to update username
     def update_username(self, username: str) -> None:
@@ -696,6 +704,9 @@ class Client(QObject):
         self.console_msg.emit("The server has reset manhunt!", ConsoleTypes.INFO)
         self.memory.write_u8(InGameVars.MANHUNT_RESET, 1)
 
+    def on_manhunt_damage(self, data: dict, event: enet.Event) -> None:
+        self.memory.write_u8(InGameVars.RECEIVE_DAMAGE_SOUND, 1)
+
     # in case of some packet corruption or some huge bug where a packet's dataType value is unknown, this function is called instead
     def on_unknown(self, data: dict, event: enet.Event) -> None:
         self.console_msg.emit(f"Unknown packet type received from the server: {data.dataType}", ConsoleTypes.ERROR)
@@ -783,6 +794,8 @@ class Client(QObject):
                     self.inject_models()
                 if self.is_connected == False:
                     break
+                if self.memory.read_u8(InGameVars.SEND_DAMAGE_SOUND) == 1:
+                    self.send_damage_sound
                 self.send_cli_data()
                 self.handle_gamemode(frame)
 

@@ -60,7 +60,8 @@ class Server(QObject):
             ServerRcvDataTypes.CHANGE_LEVEL.value: self.on_change_level,
             ServerRcvDataTypes.TAG_STATUS.value: self.on_tag_status,
             ServerRcvDataTypes.FLAGS_PAUSED.value: self.on_flags_paused,
-            ServerRcvDataTypes.MANHUNT_STATUS.value: self.on_manhunt_status
+            ServerRcvDataTypes.MANHUNT_STATUS.value: self.on_manhunt_status,
+            ServerRcvDataTypes.MANHUNT_DMG.value: self.on_manhunt_damage
         }
 
         # each object represents a player.
@@ -355,6 +356,14 @@ class Server(QObject):
     def on_flags_paused(self, data: dict, event: enet.Event) -> None:
         self.player_data[event.peer.incomingPeerID].flags_paused = True
         self.check_flag_reset_status()
+
+    # when a manhunt runner takes damage, this function will send an indication to all the other clients
+    def on_manhunt_damage(self, data: dict, event: enet.Event) -> None:
+        other_peers = self.network.get_other_peers(event.peer.incomingPeerID)
+        for peer in other_peers:
+            data = {'dataType': ClientRcvDataTypes.MANHUNT_DMG.value}
+            for peer in other_peers:
+                self.network.send(json.dumps(data), peer)
 
     # in case of some packet corruption or some huge bug where a packet's dataType value is unknown, this function is called instead
     def on_unknown(self, data: dict, event: enet.Event) -> None:

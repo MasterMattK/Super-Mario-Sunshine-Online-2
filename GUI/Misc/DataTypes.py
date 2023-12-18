@@ -26,6 +26,7 @@ class ClientRcvDataTypes(Enum):
     MANHUNT_STATUS = 20     # server requests manhunt status change
     START_MANHUNT = 21      # when the server sets starts the actual manhunt gamemode
     RESET_MANHUNT = 22      # when the server needs to reset a clients tag timer
+    MANHUNT_DMG = 23        # when the server requests runners to play manhunt damage sound
 
 
 # specifies the type of data sent to the server
@@ -42,6 +43,7 @@ class ServerRcvDataTypes(Enum):
     TAG_STATUS = 9      # a client requests a tag status change
     FLAGS_PAUSED = 10   # a client confirms that it has paused flags
     MANHUNT_STATUS = 11 # a client requests a manhunt status change
+    MANHUNT_DMG = 12    # a manhunt runner indicates they've taken damage from a hunter
 
 # this is used to distinguish between the different forms of disconnection
 class DisconnectSource(Enum):

@@ -1,7 +1,7 @@
 // This file is responsible for all of the functions that deal with the manhunt gamemode
 #include "defines.h"
 
-bool isHunter = false, manhuntActive = false, manhuntReset = false;
+bool isHunter = false, manhuntActive = false, manhuntReset = false, sendDamageSound = false, receiveDamageSound = false;
 unsigned int cooldown = 0, cooldownStarted = 0;
 
 // function prototypes (the first 2 are for in-game funcs)
@@ -16,6 +16,7 @@ void manhuntMain() {
 	checkHunterFlags();
 	refreshCooldownIfLoading();
 	manhunt_checkGoAppear();
+	checkIfReceiveDamageSound();
 }
 
 // this function checks if a reset has been requested by the GUI
@@ -50,6 +51,7 @@ void manhunt_checkIfTagged() {
             // I also make sure that your mario isn't already in the dying state before continuing
 			if (checkDistance(mario_pos, realMario_pos, 120, 90, 82, 170) == 1 && realMario[0x7C / 4] != 0x20467 && !isInCooldown()) {
 				floorDamageExec(realMario, 2, 3, 0, 0xf);
+				sendDamageSound = true;
 				setCooldown(2);
 			}
 		}
@@ -116,4 +118,11 @@ void manhunt_checkGoAppear() {
 		playStartSoundPending = false;
 
 	previousManhuntActive = manhuntActive;
+}
+
+// if the gui sets receiveDamageSound to true, play the damage sound and set it back to false
+void checkIfReceiveDamageSound() {
+	if (receiveDamageSound && playSound(0x7819)) {
+		receiveDamageSound = false;
+	}
 }
