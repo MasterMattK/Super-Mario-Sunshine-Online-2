@@ -795,7 +795,7 @@ class Client(QObject):
                 if self.is_connected == False:
                     break
                 if self.memory.read_u8(InGameVars.SEND_DAMAGE_SOUND) == 1:
-                    self.send_damage_sound
+                    self.send_damage_sound()
                 self.send_cli_data()
                 self.handle_gamemode(frame)
 
