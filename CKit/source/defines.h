@@ -20,6 +20,17 @@ typedef unsigned char bool;
 #define u8 unsigned char
 #define s8 signed char
 
+// Custom typedefs
+
+typedef struct
+{
+	float x;
+	float y;
+	float z;
+} Vector3f;
+
+typedef float Mtx[3][4];
+
 // Player number and mario list
 #define realpNum 6
 extern int pNum;
@@ -34,20 +45,12 @@ extern void printString(char *);
 extern void printNumber(int);
 extern bool playVoice(int soundId);
 extern bool playSound(int soundId);
+extern void drawTeamTriangle(u32 color, Vector3f *marioPos);
 
 #define SDA 0x803e4d20
 
 #define ADDR_FONT 0x81693cd8
 #define ADDR_GFX 0x81729c40
-
-// Custom typedefs
-
-typedef struct
-{
-	float x;
-	float y;
-	float z;
-} Vector3f;
 
 u32* alloc(int allocsize);
 void ct_Mario(u32* mario);
@@ -122,4 +125,14 @@ inline void TOCstorehalf(int offset, int val) {
 }
 inline void TOCstorebyte(int offset, int val) {
 	__asm("stb %0, %1(2)" :: "r" (val), "X" (offset));
+}
+
+inline void GXFIFO_Add(int val) {
+	__asm("stw %0, -0x8000(%1)" :: "r" (val), "r" (0xCC010000));
+}
+inline void GXFIFO_Addb(char val) {
+	__asm("stb %0, -0x8000(%1)" :: "r" (val), "r" (0xCC010000));
+}
+inline void GXFIFO_Addf(float val) {
+	__asm("stfs %0, -0x8000(%1)" :: "f" (val), "r" (0xCC010000));
 }

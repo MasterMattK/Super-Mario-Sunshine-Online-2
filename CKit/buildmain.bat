@@ -33,5 +33,7 @@ del callbacks.c.o
 del callbacks.c.s
 del debug.c.o
 del debug.c.s
+del gamemode.c.o
+del gamemode.c.s
 
 pause

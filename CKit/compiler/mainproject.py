@@ -11,7 +11,7 @@ old_stdout = sys.stdout # backup current stdout
 
 def patch_osarena_low(dol, size):
     #800eb370
-    size += 0x50 # i want to have some padding to have variables initialized as 0 (doesn't work without padding)
+    size += 0x100 # i want to have some padding to have variables initialized as 0 (doesn't work without padding)
     dol.seek(0x80341eac) # OSinit before calling OSSetarenalo
     write_lis(dol, 3, size >> 16, signed=False)
     write_ori(dol, 3, 3, size & 0xFFFF)
@@ -35,6 +35,7 @@ p.add_file("../source/fludd.c")
 p.add_file("../source/yoshi.c")
 p.add_file("../source/marioInteraction.c")
 p.add_file("../source/manhunt.c")
+p.add_file("../source/gamemode.c")
 #p.add_file("../source/debug.c")
 #p.add_file("../source/spectate.c")
 
