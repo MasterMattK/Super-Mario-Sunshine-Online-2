@@ -33,6 +33,7 @@ extern void manhunt_onStageLoad();
 extern void printString(char *);
 extern void printNumber(int);
 extern bool playVoice(int soundId);
+extern bool playSound(int soundId);
 
 #define SDA 0x803e4d20
 
