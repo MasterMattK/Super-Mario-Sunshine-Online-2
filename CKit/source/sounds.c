@@ -119,7 +119,8 @@ bool playSound(int soundId)
     bool gateOpen = gateCheck(MSound, 0);
     if (gateOpen)
     {
-        startSoundSystemSE(soundId, 0, 0, 0, 0);
+        u32 *mario = SDAword(-0x60D8);
+		startVoice(mario, soundId);
         return true;
     }
     else
