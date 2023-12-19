@@ -114,7 +114,7 @@ void manhunt_checkGoAppear() {
 		playStartSoundPending = true;
 	}
 
-	if (playStartSoundPending && playSound(0x4851))
+	if (playStartSoundPending && playVoice(0x4851))
 		playStartSoundPending = false;
 
 	previousManhuntActive = manhuntActive;
@@ -122,7 +122,13 @@ void manhunt_checkGoAppear() {
 
 // if the gui sets receiveDamageSound to true, play the damage sound and set it back to false
 void checkIfReceiveDamageSound() {
-	if (receiveDamageSound && playSound(0x7819)) {
+	static bool playedFirstSound = false;
+
+	if (!playedFirstSound && (receiveDamageSound && playVoice(0x7819))) {		// mario 64 oof sound
+		playedFirstSound = true;
+	}
+	else if (playedFirstSound && (receiveDamageSound && playSound(0x292E))) {	// damage sound
 		receiveDamageSound = false;
+		playedFirstSound = false;
 	}
 }

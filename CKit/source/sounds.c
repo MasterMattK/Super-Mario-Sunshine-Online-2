@@ -112,8 +112,8 @@ void volumeAsmRestore() {
 	__asm("fmuls 0, 0, 31");
 }
 
-// plays the sound of soundId as long as the gate is open
-bool playSound(int soundId)
+// plays the mario voice of soundId as long as the gate is open
+bool playVoice(int soundId)
 {
     int* MSound = SDAword(-0x6044);
     bool gateOpen = gateCheck(MSound, 0);
@@ -121,6 +121,20 @@ bool playSound(int soundId)
     {
         u32 *mario = SDAword(-0x60D8);
 		startVoice(mario, soundId);
+        return true;
+    }
+    else
+        return false;
+}
+
+// plays the sound of soundId as long as the gate is open
+bool playSound(int soundId)
+{
+    int* MSound = SDAword(-0x6044);
+    bool gateOpen = gateCheck(MSound, 0);
+    if (gateOpen)
+    {
+		startSoundSystemSE(soundId, 0, 0, 0, 0);
         return true;
     }
     else

@@ -32,7 +32,7 @@ extern void tag_onStageLoad();
 extern void manhunt_onStageLoad();
 extern void printString(char *);
 extern void printNumber(int);
-extern bool playSound(int soundId);
+extern bool playVoice(int soundId);
 
 #define SDA 0x803e4d20
 
