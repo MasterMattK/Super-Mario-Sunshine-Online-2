@@ -41,6 +41,8 @@ void drawTeamTriangle(float *mario, u32 graphicsFlag, u32 *TGraphics) {
 	// only draw triangles when this bit is flipped
 	if ((graphicsFlag & 0x8) == 0)
     	return;
+	else if (((u32 *)mario)[0x7C / 4] == 0x0000133F)
+		return;
 
 	u8 shirtFlag = ((u8 *)mario)[0x119];
 	if (shirtFlag & 16) 
