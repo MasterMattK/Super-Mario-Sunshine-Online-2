@@ -149,6 +149,9 @@ p.branchlink(0x802821a8, "stopRefill30")
 #p.branchlink(0x8026a284, "stopRefill31")
 #p.branchlink(0x8024ec2c, "stopRefill31")
 
+#p.branchlink(0x80299d04, "drawTeamTriangle")
+p.branch(0x8024db08, "marioDrawMain")
+
 p.branch(0x80253220, "manhuntMain")
 
 with open(".\\dol_path.txt", "r") as f:

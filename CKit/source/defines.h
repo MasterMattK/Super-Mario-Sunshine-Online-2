@@ -45,7 +45,6 @@ extern void printString(char *);
 extern void printNumber(int);
 extern bool playVoice(int soundId);
 extern bool playSound(int soundId);
-extern void drawTeamTriangle(u32 color, Vector3f *marioPos);
 
 #define SDA 0x803e4d20
 

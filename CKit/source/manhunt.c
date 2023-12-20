@@ -17,7 +17,6 @@ void manhuntMain() {
 	refreshCooldownIfLoading();
 	manhunt_checkGoAppear();
 	checkIfReceiveDamageSound();
-	drawTeamTriangle(0x4040FFFF, SDAword(-0x60B4));
 }
 
 // this function checks if a reset has been requested by the GUI

@@ -126,3 +126,4 @@ GXSetChanMatColor = 0x8035f51c;
 GXBegin = 0x8035df88;
 ReInitializeGX = 0x80233760;
 GXSetBlendMode = 0x80361dd0;
+GXInvalidateTexAll = 0x80360400;
