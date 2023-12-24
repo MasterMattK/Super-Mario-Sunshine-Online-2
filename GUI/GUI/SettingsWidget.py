@@ -187,8 +187,9 @@ class SettingsTab(QScrollArea):
     # client input applied functions
     def on_username_applied(self) -> None:
         if self.on_applied(self.username_label):
-            self.set_config.emit("CLIENT", "username", self.username_line_edit.text(), ConfigTypes.STR)
-            self.update_username.emit(self.username_line_edit.text())
+            username = self.username_line_edit.text().replace(" ", "_")
+            self.set_config.emit("CLIENT", "username", username, ConfigTypes.STR)
+            self.update_username.emit(username)
     def on_client_ip_applied(self) -> None:
         if self.client_ip_label.text().startswith("*") and not is_ip_address(self.client_ip_line_edit.text()):
             PopUpBox.display("You provided an invalid IP address!", PopUpBoxTypes.ERROR)
