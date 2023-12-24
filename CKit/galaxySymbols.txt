@@ -127,3 +127,6 @@ GXBegin = 0x8035df88;
 ReInitializeGX = 0x80233760;
 GXSetBlendMode = 0x80361dd0;
 GXInvalidateTexAll = 0x80360400;
+
+initFruit = 0x801e1bf4;
+load_Fruit = 0x801af754;

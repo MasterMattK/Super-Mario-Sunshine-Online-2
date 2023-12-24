@@ -7,9 +7,11 @@
 int pNum = 1;
 u32********* marios[realpNum] = { [0 ... (realpNum-1)] = -1 };
 
+int fNum = 1;
+
 u32* makeMarios(u32* mario) {
 	// this makes it so only 1 mario can spawn on file select
-	char* bob = SDAword(-0x6048);
+	char* bob = SDAword(-0x6048);	// pretty sure bob is the pointer for current level
 	if (bob[0x7c] == 15) {
 		pNum = 1;
 	}
@@ -59,4 +61,45 @@ void load_MarioTrickyOverhaul(u32* mario, u32* unk, u32* bleh1, u32* bleh2, u32*
 void __attribute__((noinline)) load_MarioMFLR(u32* mario, u32* unk) {
 	__asm("mflr 0");
 	__asm("b load_Mario");
+}
+
+u32* makeFruit(u32* fruit, char unk) {
+	// this makes it so no fruit will spawn on scene/option.szs
+	char* currLevel = SDAword(-0x6048);
+	if (currLevel[0x7c] == 1) {
+		u32* f = alloc(0x198);
+		initFruit(f);
+		SDAstoreword(0x7777, &fruit);
+	}	
+
+	return fruit;
+}
+
+void loadFruitOverhaul(u32* fruit, u32* unk, u32* bleh1, u32* bleh2, u32* gadgetNode)	// probably have to add a check for it it's a fruit or not... -0x8 from r3 should say "Fruit"
+{
+	// unk is memory input stream
+	u32* susNode = gadgetNode[0]; // the gadget node would be the first input
+	u32** newNode = alloc(12);
+	newNode[2] = fruit; // the mario would be second input
+	newNode[1] = gadgetNode;
+	newNode[0] = susNode;
+	susNode[1] = newNode;
+	gadgetNode[0] = newNode;
+	gadgetNode = newNode;
+
+	int a = unk[1], b = unk[3], c = unk[4];
+	unk[1] = a;
+	unk[3] = b;
+	unk[4] = c;
+	SDAstoreword(-0x60D8, marios[0]);
+	load_FruitMFLR(fruit, unk);
+
+	SDAstoreword(-0x60D8, marios[0]);
+
+}
+
+// I inject a branch straight into load_Fruit so I have to manually do mflr r0
+void __attribute__((noinline)) load_FruitMFLR(u32* fruit, u32* unk) {
+	__asm("mflr 0");
+	__asm("b load_Fruit");
 }
