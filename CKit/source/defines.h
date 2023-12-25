@@ -55,7 +55,7 @@ u32* alloc(int allocsize);
 void ct_Mario(u32* mario);
 void load_Mario(u32* mario, u32* unk);
 
-void initFruit(u32* fruit);
+void initFruit(u32* fruit, char *unk);
 void load_Fruit(u32* fruit, u32* unk);
 
 inline int* fromRegister(int reg) {

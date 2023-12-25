@@ -33,8 +33,8 @@ u32* makeMarios(u32* mario) {
 }
 
 typedef struct {
-	Node *prev;
-	Node *next;
+	u32 *next;
+	u32 *prev;
 	u32 *data;
 } Node;
 
@@ -43,10 +43,10 @@ void load_MarioTrickyOverhaul(u32* mario, u32* unk, u32* bleh1, u32* bleh2, Node
 	for (int i = 1; i < pNum; i++) {
 		Node *newNode = alloc(12);
 		newNode->data = marios[i];
-		newNode->next = n;
-		newNode->prev = n->prev;
-		n->prev->next = newNode;
-		n->next->prev = newNode;
+		newNode->prev = n;
+		newNode->next = n->next;
+		((Node *)(n->prev))->prev = newNode;
+		n->next = newNode;
 		n = newNode;
 	}
 
