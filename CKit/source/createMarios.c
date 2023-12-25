@@ -32,8 +32,14 @@ u32* makeMarios(u32* mario) {
 	return mario;
 }
 
+typedef struct {
+	Node *prev;
+	Node *next;
+	u32 *data;
+} Node;
+
 // This is how mario is loaded through an input stream or something. I have to preserve it's neccesarry values to allow for multiple reads that are equivalent
-void load_MarioTrickyOverhaul(u32* mario, u32* unk, u32* bleh1, u32* bleh2, u32* gadgetNode) {
+void load_MarioTrickyOverhaul(u32* mario, u32* unk, u32* bleh1, u32* bleh2, Node *n) {
 	// unk is memory input stream
 	u32* susNode = gadgetNode[0]; // the gadget node would be the first input
 	for (int i = 1; i < pNum; i++) {
@@ -44,6 +50,16 @@ void load_MarioTrickyOverhaul(u32* mario, u32* unk, u32* bleh1, u32* bleh2, u32*
 		susNode[1] = newNode;
 		gadgetNode[0] = newNode;
 		gadgetNode = newNode;
+	}
+
+	for (int i = 1; i < pNum; i++) {
+		Node *newNode = alloc(12);
+		newNode->data = marios[i];
+		newNode->next = n;
+		newNode->prev = n->prev;
+		n->prev->next = newNode;
+		n->next->prev = newNode;
+		n = newNode;
 	}
 
 	int a = unk[1], b = unk[3], c = unk[4];
@@ -63,14 +79,16 @@ void __attribute__((noinline)) load_MarioMFLR(u32* mario, u32* unk) {
 	__asm("b load_Mario");
 }
 
-u32* makeFruit(u32* fruit, char unk) {
-	
+u32* makeFruit(u32* fruit, char *unk) {
+	initFruit(fruit, unk);
+
+	// this makes it so no fruit will spawn on scene/option.szs
 	char* currLevel = SDAword(-0x6048);
 	if (currLevel[0x7c] == 1) {
 		u32* f = alloc(0x1A8);
-		initFruit(f);
-		//SDAstoreword(0x7777, &fruit);
+		initFruit(f, unk);
 	}	
+
 	return fruit;
 }
 
@@ -90,10 +108,11 @@ void loadFruitOverhaul(u32* fruit, u32* unk, u32* bleh1, u32* bleh2, u32* gadget
 	unk[1] = a;
 	unk[3] = b;
 	unk[4] = c;
-	SDAstoreword(-0x60D8, marios[0]);	// i need to figure out what "marios[]" is before replacing this-- it currently isn't crashing the game, for what it's worth
+	SDAstoreword(-0x60D8, marios[0]);
 	load_FruitMFLR(fruit, unk);
 
 	SDAstoreword(-0x60D8, marios[0]);
+
 }
 
 // I inject a branch straight into load_Fruit so I have to manually do mflr r0
