@@ -40,18 +40,6 @@ typedef struct {
 
 // This is how mario is loaded through an input stream or something. I have to preserve it's neccesarry values to allow for multiple reads that are equivalent
 void load_MarioTrickyOverhaul(u32* mario, u32* unk, u32* bleh1, u32* bleh2, Node *n) {
-	// unk is memory input stream
-	u32* susNode = gadgetNode[0]; // the gadget node would be the first input
-	for (int i = 1; i < pNum; i++) {
-		u32** newNode = alloc(12);
-		newNode[2] = marios[i]; // the mario would be second input
-		newNode[1] = gadgetNode;
-		newNode[0] = susNode;
-		susNode[1] = newNode;
-		gadgetNode[0] = newNode;
-		gadgetNode = newNode;
-	}
-
 	for (int i = 1; i < pNum; i++) {
 		Node *newNode = alloc(12);
 		newNode->data = marios[i];
