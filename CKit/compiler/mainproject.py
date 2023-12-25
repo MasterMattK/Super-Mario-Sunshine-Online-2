@@ -46,7 +46,7 @@ p.branchlink(0x8029d7f8, "makeMarios")
 p.branch(0x80276bd0, "load_MarioTrickyOverhaul")
 
 p.branchlink(0x802acdc4, "makeFruit")
-p.branch(0x801af750, "loadFruitOverhaul")  # injects into TMapObjBase::load...
+#p.branch(0x801af750, "loadFruitOverhaul")  # injects into TMapObjBase::load...
 
 p.branch(0x80298bac, "onStageLoad")
 

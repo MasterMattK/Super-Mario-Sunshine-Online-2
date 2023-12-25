@@ -64,14 +64,13 @@ void __attribute__((noinline)) load_MarioMFLR(u32* mario, u32* unk) {
 }
 
 u32* makeFruit(u32* fruit, char unk) {
-	// this makes it so no fruit will spawn on scene/option.szs
+	
 	char* currLevel = SDAword(-0x6048);
 	if (currLevel[0x7c] == 1) {
-		u32* f = alloc(0x198);
+		u32* f = alloc(0x1A8);
 		initFruit(f);
-		SDAstoreword(0x7777, &fruit);
+		//SDAstoreword(0x7777, &fruit);
 	}	
-
 	return fruit;
 }
 
@@ -91,11 +90,10 @@ void loadFruitOverhaul(u32* fruit, u32* unk, u32* bleh1, u32* bleh2, u32* gadget
 	unk[1] = a;
 	unk[3] = b;
 	unk[4] = c;
-	SDAstoreword(-0x60D8, marios[0]);
+	SDAstoreword(-0x60D8, marios[0]);	// i need to figure out what "marios[]" is before replacing this-- it currently isn't crashing the game, for what it's worth
 	load_FruitMFLR(fruit, unk);
 
 	SDAstoreword(-0x60D8, marios[0]);
-
 }
 
 // I inject a branch straight into load_Fruit so I have to manually do mflr r0
