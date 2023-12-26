@@ -32,11 +32,13 @@ u32* makeMarios(u32* mario) {
 	return mario;
 }
 
-typedef struct {
-	u32 *next;
-	u32 *prev;
+typedef struct Node Node;
+
+struct Node {
+	Node *next;
+	Node *prev;
 	u32 *data;
-} Node;
+};
 
 // This is how mario is loaded through an input stream or something. I have to preserve it's neccesarry values to allow for multiple reads that are equivalent
 void load_MarioTrickyOverhaul(u32* mario, u32* unk, u32* bleh1, u32* bleh2, Node *n) {
@@ -45,7 +47,7 @@ void load_MarioTrickyOverhaul(u32* mario, u32* unk, u32* bleh1, u32* bleh2, Node
 		newNode->data = marios[i];
 		newNode->prev = n;
 		newNode->next = n->next;
-		((Node *)(n->prev))->prev = newNode;
+		n->prev->prev = newNode;
 		n->next = newNode;
 		n = newNode;
 	}
