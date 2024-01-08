@@ -3,10 +3,10 @@
 
 // this function links onto TMario::perform which allows us access to TGraphics
 void marioDrawMain() {
-	u32 graphicsFlag = fromRegister(29);
+	u32 performFlag = fromRegister(29);
 	u32 *TGraphics = fromRegister(30);
 	for (int i = 0; i < pNum; i++) {
-		drawTeamTriangle((float *)marios[i], graphicsFlag, TGraphics);
+		drawTeamTriangle((float *)marios[i], performFlag, TGraphics);
 	}
 }
 
@@ -31,7 +31,7 @@ void GXBegin(u8 primitve, u8 vtxfmt, u16 vtxcnt);
 void GXSetBlendMode(u8 type, u8 src_fact, u8 dst_fact, u8 op);
 
 // draws a color-coded triangle above other marios' heads to indicate team
-void drawTeamTriangle(float *mario, u32 graphicsFlag, u32 *TGraphics) {
+void drawTeamTriangle(float *mario, u32 performFlag, u32 *TGraphics) {
   	float* cameraMatrix;
   	float matrix[12];
   	Vector3f screenPos, triPos;
@@ -39,7 +39,7 @@ void drawTeamTriangle(float *mario, u32 graphicsFlag, u32 *TGraphics) {
 	u32 color;
 
 	// only draw triangles when this bit is flipped
-	if ((graphicsFlag & 0x8) == 0)
+	if ((performFlag & 0x8) == 0)
     	return;
 	else if (((u32 *)mario)[0x7C / 4] == 0x0000133F)
 		return;
