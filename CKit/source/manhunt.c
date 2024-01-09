@@ -88,9 +88,12 @@ void refreshCooldownIfLoading() {
 
 // refreshes manhunt cooldown if hunter is in a cutscene(not fmv)
 void refreshCooldownIfCutscene() {
+	u16 *TMarDirector = SDAword(-0x6048);
 	if (cutsceneCooldownPending) {
 		setCooldown(5);		// 5 is for debug, change to 1
 		cutsceneCooldownPending = false;
+	} else if (TMarDirector[0x4C / 2] & 0x0040) {
+		setCooldown(5);		// 5 is for debug, change to 1
 	}
 }
 
