@@ -259,6 +259,28 @@ void dummyFix16() {
 	__asm("b cEleven");
 }
 
+// doesn't allow the code to check mario controller
+void dummyFix17() {
+	__asm("lis 15, 0x8040");
+	__asm("ori 15, 15, 0xE0E8");
+	__asm("lwz 15, 0(15)");
+	__asm("cmpw 15, 31");
+	__asm("bne 0x8");
+	__asm("lwz 0, 0x00D4 (3)");
+	__asm("b mpNine");
+}
+
+// doesn't allow the code to check mario controller
+void dummyFix18() {
+	__asm("lis 15, 0x8040");
+	__asm("ori 15, 15, 0xE0E8");
+	__asm("lwz 15, 0(15)");
+	__asm("cmpw 15, 31");
+	__asm("bne 0x8");
+	__asm("lwz 0, 0x00D0 (4)");
+	__asm("b mpTen");
+}
+
 // if it's a dummy mario, we don't update mario's position (this is done from script)
 void stopPosUpdate1(u16* mario) {
 	__asm("mr 14, 3");

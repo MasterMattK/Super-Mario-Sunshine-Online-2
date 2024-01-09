@@ -37,6 +37,7 @@ extern int pNum;
 extern unsigned int********* marios[realpNum];
 extern int gamemode;
 extern unsigned int currentTime;
+extern bool isTagger, isHunter;
 
 // List of global functions to execute
 extern void tag_onStageLoad();

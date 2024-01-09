@@ -38,6 +38,8 @@ mpFive = 0x8025BB40;
 mpSix = 0x80251DF0;
 mpSeven = 0x80251DE4;
 mpEight = 0x8021C2A0;
+mpNine = 0x8024c36c;
+mpTen = 0x802658c8;
 
 cOne = 0x80251498;
 cTwo = 0x8024356C;

@@ -17,6 +17,7 @@ void manhuntMain() {
 	refreshCooldownIfLoading();
 	manhunt_checkGoAppear();
 	checkIfReceiveDamageSound();
+	refreshCooldownIfCutscene();
 }
 
 // this function checks if a reset has been requested by the GUI
@@ -82,6 +83,14 @@ void refreshCooldownIfLoading() {
 	int *mario = SDAword(-0x60D8);
 	if (mario[0x7C / 4] == 0x00001337) {
 		setCooldown(3);
+	}
+}
+
+// refreshes manhunt cooldown if hunter is in a cutscene(not fmv)
+void refreshCooldownIfCutscene() {
+	u16 *TMarDirector = SDAword(-0x6048);
+	if (TMarDirector[0x4C / 2] & 0x0040 || TMarDirector[0x4C / 2] & 0x0001) {
+		setCooldown(1);
 	}
 }
 

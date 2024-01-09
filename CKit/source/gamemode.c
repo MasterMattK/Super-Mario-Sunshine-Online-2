@@ -32,6 +32,18 @@ void GXSetBlendMode(u8 type, u8 src_fact, u8 dst_fact, u8 op);
 
 // draws a color-coded triangle above other marios' heads to indicate team
 void drawTeamTriangle(float *mario, u32 performFlag, u32 *TGraphics) {
+
+	if (gamemode == 0)				// if the gamemode isn't tag or manhunt, don't continue
+		return;
+
+	u8 shirtFlag = ((u8 *)mario)[0x119];
+
+	if (gamemode == 1 && isTagger && !(shirtFlag & 16))	// during Tag/HnS, make hider triangles only appear to other hiders
+		return;
+
+	if (gamemode == 2 && isHunter && !(shirtFlag & 16))	// during manhunt, make hider triangles only appear to other hiders
+		return;
+
   	float* cameraMatrix;
   	float matrix[12];
   	Vector3f screenPos, triPos;
@@ -44,7 +56,6 @@ void drawTeamTriangle(float *mario, u32 performFlag, u32 *TGraphics) {
 	else if (((u32 *)mario)[0x7C / 4] == 0x0000133F)
 		return;
 
-	u8 shirtFlag = ((u8 *)mario)[0x119];
 	if (shirtFlag & 16) 
 		color = RED;
 	else
