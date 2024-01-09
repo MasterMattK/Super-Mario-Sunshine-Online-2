@@ -153,6 +153,7 @@ p.branchlink(0x802821a8, "stopRefill30")
 
 #p.branchlink(0x80299d04, "drawTeamTriangle")
 p.branch(0x8024db08, "marioDrawMain")
+p.branch(0x8029a318, "hasCutsceneStarted")
 
 p.branch(0x80253220, "manhuntMain")
 

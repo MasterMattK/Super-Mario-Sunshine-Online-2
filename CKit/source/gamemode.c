@@ -123,3 +123,8 @@ void drawTeamTriangle(float *mario, u32 performFlag, u32 *TGraphics) {
   	GXFIFO_Addf(bottom);
   	GXFIFO_Addf(screenPos.z);
 }
+
+bool cutsceneCooldownPending = false;
+void hasCutsceneStarted() {
+	cutsceneCooldownPending = true;
+}
