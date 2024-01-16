@@ -824,10 +824,8 @@ class Client(QObject):
             tag_status_data = {'dataType': ServerRcvDataTypes.TAG_STATUS.value, 'tag_status': TagStatus.TAGGER.value}
             self.network.send(json.dumps(tag_status_data))
 
-    # COME BACK TO THIS AND STUDY THE WAY OF THE FLAGS
     def handle_manhunt(self, frame: int) -> None:
-        return
-        if frame == 0 and not self.pause_flags and self.queued_flag_updates.empty():
+        if frame == 0 and self.queued_flag_updates.empty():
             self.flag_data.update_data()
             self.network.send(self.flag_data.to_json())
 
