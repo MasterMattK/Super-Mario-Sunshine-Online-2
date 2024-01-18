@@ -21,18 +21,20 @@ from Misc.DataTypes import ConsoleTypes, ConfigTypes, GamemodeTypes, PopUpBoxTyp
 from Misc.Config import Config
 
 
+# MainWindow object which is the base for the GUI
 class MainWindow(QMainWindow):
-    stop_client = Signal()
-    stop_server = Signal()
-    client_connect = Signal(str, int)
-    client_disconnect = Signal()
-    client_command = Signal(str, Client)
-    server_command = Signal(str, Server)
-    chat = Signal(str)
-    hm = Signal(str)
+    # signals emitted by the MainWindow object
+    stop_client = Signal() # emitted to stop the Client object
+    stop_server = Signal() # emitted to stop the Server object
+    client_connect = Signal((str, int), ('ip', 'port')) # emitted to Client object to connect to host
+    client_disconnect = Signal() # emitted to Client object to disconnect from host
+    client_command = Signal((str, Client), ('command', 'client')) # emitted to submit client command
+    server_command = Signal((str, Server), ('command', 'server')) # emitted to submit server command
+    hm = Signal(str) # this signal is for the hidden model system, which we may remove
 
     VERSION = '2.2 Beta' # I'm leaving it as a string just in case we ever have something like '2.2a' with a letter in it
 
+    # initializes QMainWindow and sub widgets, as well as some member vars
     def __init__(self) -> None:
         super().__init__()
         qdarktheme.setup_theme()
@@ -65,22 +67,41 @@ class MainWindow(QMainWindow):
         self.server = None
         self.server_thread = None
 
+        self.shutdown_in_progress = False
+
         self.populate_fields()
 
     # we need to make sure to clean up the client and server threads before exiting
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self.client_thread is not None and self.client_thread.isRunning():
-            self.stop_client.emit()
-            self.client_thread.destroyed.connect(self.close)
-            event.ignore()
-            return
-        elif self.server_thread is not None and self.server_thread.isRunning():
-            self.stop_server.emit()
-            self.server_thread.destroyed.connect(self.close)
-            event.ignore()
-            return
-        event.accept()
+        client_running = self.client_thread is not None and self.client_thread.isRunning()
+        server_running = self.server_thread is not None and self.server_thread.isRunning()
 
+        if client_running or server_running:
+            if client_running:
+                self.stop_client.emit()
+
+            if server_running:
+                self.stop_server.emit()
+
+            self.shutdown_in_progress = True
+            event.ignore()
+
+            if client_running:
+                self.client_thread.destroyed.connect(self.onServerOrClientDestroyed)
+            if server_running:
+                self.server_thread.destroyed.connect(self.onServerOrClientDestroyed)
+        else:
+            event.accept()
+
+    # we check that the server and client threads are destroyed before exiting
+    def onServerOrClientDestroyed(self) -> None:
+        if ((self.client_thread is None or not self.client_thread.isRunning()) and 
+        (self.server_thread is None or not self.server_thread.isRunning())):
+            if self.shutdown_in_progress:
+                self.shutdown_in_progress = False
+                self.close()
+
+    # create menubar with necessary options and connect signals
     def init_menubar(self):
         self.view_menu = self.menuBar().addMenu("View")
         self.options_menu = self.menuBar().addMenu("Options")
@@ -100,7 +121,7 @@ class MainWindow(QMainWindow):
 
         self.launch_sms_with_gui = self.options_menu.addAction("Launch SMS with Dolphin GUI")
         self.launch_sms_with_gui.setCheckable(True)
-        self.launch_sms_with_gui.triggered.connect(self.launch_with_dolphin_gui_checkbox_changed)
+        self.launch_sms_with_gui.triggered.connect(self.toggle_launch_with_dolphin_gui)
         if self.config.launch_with_dolphin:
             self.launch_sms_with_gui.setChecked(True)
         else:
@@ -116,6 +137,7 @@ class MainWindow(QMainWindow):
         self.about = self.help_menu.addAction("About")
         self.about.triggered.connect(self.about_tab)
     
+    # toggle between dark and light mode
     def toggle_dark_mode(self, checked: bool):
         if checked:
             qdarktheme.setup_theme()
@@ -128,7 +150,8 @@ class MainWindow(QMainWindow):
             self.client_console.client_io_widget.change_text_theme(dark_mode=False)
             self.server_console.server_io_widget.change_text_theme(dark_mode=False)
 
-    def launch_with_dolphin_gui_checkbox_changed(self, checked: bool) -> None:
+    # toggle between launching game with dolphin gui
+    def toggle_launch_with_dolphin_gui(self, checked: bool) -> None:
         if checked:
             self.config.set_value("GENERAL", "launch_with_dolphin", "True", ConfigTypes.BOOL)
         else:
@@ -144,6 +167,7 @@ class MainWindow(QMainWindow):
         self.server = None
         self.server_thread = None
 
+    # create client and server consoles as docked widgets
     def init_console_docked_widgets(self) -> None:
         self.client_console = ClientConsole()
         self.server_console = ServerConsole()
@@ -152,6 +176,7 @@ class MainWindow(QMainWindow):
 
         self.client_console.launch_sms_button.clicked.connect(self.on_launch_sms)
 
+    # reset the consoles to their original spots
     def reset_docked_widgets(self) -> None:
         self.client_console.setVisible(True)
         self.server_console.setVisible(True)
@@ -160,6 +185,7 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.BottomDockWidgetArea, self.client_console)
         self.addDockWidget(Qt.BottomDockWidgetArea, self.server_console)
 
+    # displays about information
     def about_tab(self) -> None:
         about_string = ""
         about_string += f"Super Mario Sunshine Online version {self.VERSION}\n\n"
@@ -176,16 +202,19 @@ class MainWindow(QMainWindow):
 
         PopUpBox.display(about_string, PopUpBoxTypes.INFO)
 
+    # create settings tab and connect signals
     def init_settings_tab(self) -> None:
         self.settings_tab = SettingsTab()
         self.settings_tab.launch_path_changed.connect(self.on_path_changed)
         self.settings_tab.set_config.connect(self.config.set_value)
         self.tabs.addTab(self.settings_tab, "Settings")
 
+    # enable the launch button when paths are entered
     def on_path_changed(self) -> None:
         if self.config.dolphin_path != '' and self.config.sms_path != '':
             self.clt_tab.launch_game_button.setEnabled(True)
         
+    # create client actions tab and connect signals
     def init_client_tab(self) -> None:
         self.clt_tab = ClientActionsTab()
         self.client_console.hook_button.clicked.connect(self.on_hook_sms)
@@ -205,22 +234,31 @@ class MainWindow(QMainWindow):
 
         self.tabs.addTab(self.clt_tab, 'Client Actions')
 
-    # this function needs to be outside of the ClientTab widget to deal with the Client() object
+    # this function hooks onto sms and starts the Client object
     def on_hook_sms(self) -> None:
+        # let the user know we're hooking. the button gets reset by the on_client_started or on_client_stopped funcs below
         self.client_console.hook_button.setDisabled(True)
         self.client_console.hook_button.setText("Hooking...")
         self.client_console.client_io_widget.output("Starting Client and attempting to hook...", ConsoleTypes.STARTING)
 
+        # create thread and start client
         self.client_thread = QThread()
         self.client = Client(self.config.username, self.clt_tab.model_list, self.config.model, self.VERSION)
-        
         self.client.moveToThread(self.client_thread)
 
+        # try to automatically expand memory if possible before hooking
+        if not self.config.verify_game_config():
+            self.client_console.client_io_widget.output("The game settings for Sunshine Online (GMSE10) couldn't be verified properly! Your memory may not be expanded!", ConsoleTypes.WARNING)
+        else:
+            self.client_console.client_io_widget.output("Memory expansion has been verified. If hooking still fails due to memory expansion, try restarting Dolphin.", ConsoleTypes.STARTING)
+
+        # set up starting and ending signal connections to keep cleanup easy
         self.client_thread.started.connect(self.client.hook_sms)
         self.client.destroyed.connect(self.client_thread.quit)
         self.client_thread.finished.connect(self.client_thread.deleteLater)
         self.client_thread.destroyed.connect(self.on_client_deleted)
 
+        # set up general client signals and slots
         self.client.console_msg.connect(self.client_console.client_io_widget.output)
         self.client.client_started.connect(self.on_client_started)
         self.client.client_stopped.connect(self.on_client_stopped)
@@ -238,16 +276,19 @@ class MainWindow(QMainWindow):
         self.client_console.client_io_widget.chat.connect(self.client.chat_message)
         self.hm.connect(self.client.update_model)
 
+        # set up client settings signals and slots
         self.settings_tab.update_username.connect(self.client.update_username)
         self.clt_tab.update_model.connect(self.client.update_model)
         self.clt_tab.update_volume.connect(self.client.update_volume)
 
+        # set up client commands signals and slots
         self.client_commands.change_level_sig.connect(self.client.on_change_level_sig)
         self.client_commands.list_players_sig.connect(self.client.on_list_players_sig)
         self.client_commands.on_teleport_sig.connect(self.client.on_teleport_sig)
 
         self.client_thread.start()
 
+    # let the user know the client has successfully started
     def on_client_started(self) -> None:
         self.clt_tab.setEnabled(True)
         self.client_console.hook_button.setEnabled(True)
@@ -255,6 +296,7 @@ class MainWindow(QMainWindow):
         self.client_console.client_button_stack.setCurrentIndex(1)
         self.client_console.client_io_widget.output("Client Hooked!", ConsoleTypes.STARTING)
 
+    # let the user konw the client has successfully exited
     def on_client_stopped(self) -> None:
         self.clt_tab.setDisabled(True)
         self.client_console.hook_button.setText("Hook onto SMS")
@@ -263,16 +305,19 @@ class MainWindow(QMainWindow):
         self.client_console.connect_stack.setCurrentIndex(0)
         self.client_console.client_io_widget.output("Client Exited!", ConsoleTypes.EXITING)
 
+    # let the user know the client has successfully connected to a host
     def on_connection_succeeded(self) -> None:
         self.client_console.connect_stack.setCurrentIndex(1)
         self.client_console.connect_button.setEnabled(True)
         self.client_console.connect_button.setText("Connect")
 
+    # let the user know the client has failed in connecting to a host
     def on_connection_failed(self) -> None:
         self.client_console.connect_stack.setCurrentIndex(0)
         self.client_console.connect_button.setEnabled(True)
         self.client_console.connect_button.setText("Connect")
 
+    # let the user know the client has successfully disconnected from a host and reset buttons
     def on_disconnection_succeeded(self) -> None:
         self.client_console.connect_stack.setCurrentIndex(0)
         self.client_console.disconnect_button.setEnabled(True)
@@ -286,17 +331,20 @@ class MainWindow(QMainWindow):
         self.clt_tab.stage_combobox.setEnabled(True)
         self.clt_tab.episode_combobox.setEnabled(True)
 
+    # toggle between allowing tps based on the current server's settings
     def on_allow_tps_sig(self, toggle: bool) -> None:
         self.clt_tab.teleport_button.setEnabled(toggle)
         self.clt_tab.teleport_destination_combobox.setEnabled(toggle)
         self.clt_tab.teleport_label.setEnabled(toggle)
 
+    # toggle between allowing level changes based on the current server's settings
     def on_allow_level_changes_sig(self, toggle: bool) -> None:
         self.clt_tab.level_button.setEnabled(toggle)
         self.clt_tab.level_label.setEnabled(toggle)
         self.clt_tab.stage_combobox.setEnabled(toggle)
         self.clt_tab.episode_combobox.setEnabled(toggle)
 
+    # launches sms with specified paths and tries to verify expanded memory
     def on_launch_sms(self) -> None:
         self.client_console.client_io_widget.output("Launching SMS!", ConsoleTypes.STARTING)
         if self.config.launch_with_dolphin:
@@ -306,6 +354,9 @@ class MainWindow(QMainWindow):
 
         if not self.config.verify_game_config():
             self.client_console.client_io_widget.output("The game settings for Sunshine Online (GMSE10) couldn't be verified properly! Your memory may not be expanded!", ConsoleTypes.WARNING)
+        else:
+            self.client_console.client_io_widget.output("Memory expansion has been verified. If hooking still fails due to memory expansion, try restarting Dolphin.", ConsoleTypes.STARTING)
+        
         try:
             cmd = [
                 self.config.dolphin_path,
@@ -317,6 +368,7 @@ class MainWindow(QMainWindow):
             self.client_console.client_io_widget.output("You're specified paths failed to launch! Make sure you specified the right paths!", ConsoleTypes.ERROR)
             return
     
+    # when the connect button is clicked, this emits a signal to the Client object and updates the user that we're connecting
     def on_connect_client(self) -> None:
         if self.client == None:
             return
@@ -324,12 +376,14 @@ class MainWindow(QMainWindow):
         self.client_console.connect_button.setText("Connecting...")
         self.client_connect.emit(self.config.client_ip, self.config.client_port)
 
+    # when the disconnect button is clicked, this emits a signal to the Client object and disables the disconnect button
     def on_disconnect_client(self) -> None:
         if self.client == None:
             return
         self.client_console.disconnect_button.setDisabled(True)
         self.client_disconnect.emit()
 
+    # deals with hidden model system, I think we may remove this because it's kinda a confusing system and unnecessary
     def on_hm(self, model: str) -> None:
         model += "_hidden"
         if model.lower() in self.clt_tab.model_list:
@@ -337,6 +391,7 @@ class MainWindow(QMainWindow):
             self.clt_tab.model_combo_box.setCurrentIndex(self.clt_tab.model_combo_box.count() - 1)
             self.hm.emit(model)
 
+    # create server actions tab and connect signals
     def init_server_tab(self) -> None:
         self.svr_tab = ServerActionsTab()
         self.server_console.start_server_button.clicked.connect(self.start_server_clicked)
@@ -353,11 +408,14 @@ class MainWindow(QMainWindow):
 
         self.tabs.addTab(self.svr_tab, 'Server Actions')
 
+    # this function starts the server and connects signals and slots
     def start_server_clicked(self) -> None:
+        # let the user know we're starting the server
         self.server_console.start_server_button.setDisabled(True)
         self.server_console.start_server_button.setText("Starting...")
         self.server_console.server_io_widget.output("Starting Server...", ConsoleTypes.STARTING)
 
+        # try creating the server object
         try:
             self.server = Server(self.config.server_ip, self.config.server_port, 8, self.config.sync_flags, self.config.disable_refills, self.VERSION)
         except MemoryError:
@@ -366,15 +424,17 @@ class MainWindow(QMainWindow):
             self.on_server_stopped()
             return
         
+        # put the server object in its own thread
         self.server_thread = QThread()
-        
         self.server.moveToThread(self.server_thread)
 
+        # set up starting and ending signal connections to keep cleanup easy
         self.server_thread.started.connect(self.server.start_server)
         self.server.destroyed.connect(self.server_thread.quit)
         self.server_thread.finished.connect(self.server_thread.deleteLater)
         self.server_thread.destroyed.connect(self.on_server_deleted)
 
+        # set up general server signals and slots
         self.server.console_msg.connect(self.server_console.server_io_widget.output)
         self.server.server_started.connect(self.on_server_started)
         self.server.server_stopped.connect(self.on_server_stopped)
@@ -393,6 +453,7 @@ class MainWindow(QMainWindow):
         self.server.set_hunter.connect(self.svr_tab.on_set_hunter)
         self.server.gamemode_change.connect(self.on_gamemode_change)
 
+        # set up server commands signals and slots
         self.server_commands.flags_sig.connect(self.server.on_sync_flags_sig)
         self.server_commands.flags_reset_sig.connect(self.server.on_reset_flags_sig)
         self.server_commands.change_level_sig.connect(self.server.on_change_level_sig)
@@ -418,6 +479,7 @@ class MainWindow(QMainWindow):
 
         self.server_thread.start()
 
+    # let the user know the server has successfully started
     def on_server_started(self) -> None:
         self.svr_tab.setEnabled(True)
         self.server_console.start_server_button.setEnabled(True)
@@ -425,6 +487,7 @@ class MainWindow(QMainWindow):
         self.server_console.server_button_stack.setCurrentIndex(1)
         self.server_console.server_io_widget.output("Server Started!", ConsoleTypes.STARTING)
 
+    # let the user know the server has successfully exited
     def on_server_stopped(self) -> None:
         self.svr_tab.setDisabled(True)
         self.server_console.start_server_button.setText("Start Server")
@@ -432,10 +495,12 @@ class MainWindow(QMainWindow):
         self.server_console.server_button_stack.setCurrentIndex(0)
         self.server_console.server_io_widget.output("Server Exited!", ConsoleTypes.EXITING)
 
+    # visually update the gamemode section when the Server object updates the gamemode
     def on_gamemode_change(self, mode: GamemodeTypes):
         self.svr_tab.gamemode_stack.setCurrentIndex(mode.value)
         self.svr_tab.gamemode_combobox.setCurrentIndex(mode.value)
 
+    # fill all of the necessary fields of the GUI on startup based on config
     def populate_fields(self) -> None:
         self.settings_tab.dolphin_path_line_edit.setText(self.config.dolphin_path)
         self.settings_tab.game_path_line_edit.setText(self.config.sms_path)

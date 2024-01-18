@@ -6,7 +6,9 @@ import os
 from GUI.GUI import MainWindow
 from Misc.ErrorHandling import ErrorHandling
 
-def setup_exceptionhook() -> None:
+# this function creates an excepthook so that we can log exceptions and create popups when one occurs.
+# we also want to eventually give the option to report these exceptions to a google form when they occur
+def setup_excepthook() -> None:
     # get the directory path of the script being executed
     script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
     log_file_path = os.path.join(script_dir, "exceptions.log")
@@ -25,8 +27,9 @@ def setup_exceptionhook() -> None:
     # set the global exception handler
     sys.excepthook = ErrorHandling.log_exception
 
+# main function which creates Qt application and window and starts the event loop
 def main() -> None:
-    setup_exceptionhook()
+    setup_excepthook()
 
     app = QApplication(sys.argv)
     window = MainWindow()
