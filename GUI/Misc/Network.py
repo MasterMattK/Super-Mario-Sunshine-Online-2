@@ -76,8 +76,6 @@ class NetworkClient:
             sleep(0.1)
             event = self.host.service(0)
 
-            #raise IOError("Servicing error - probably disconnected.")
-
             if event.type == enet.EVENT_TYPE_CONNECT:
                 self.send(json.dumps(data), reliable=True)
                 return True

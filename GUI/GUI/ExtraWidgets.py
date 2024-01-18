@@ -262,3 +262,19 @@ class PopUpBox:
             message_box.setWindowTitle("Info")
 
         return message_box.exec()
+    
+class ExceptionPopUpBox:
+    @staticmethod
+    def display(text: str, detailed_text: str) -> int:
+        message_box = QMessageBox()
+
+        message_box.setText(text)
+        message_box.setDetailedText(detailed_text)
+            
+        message_box.setIcon(QMessageBox.Critical)
+        message_box.setWindowTitle("Error")
+            
+        message_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        message_box.setDefaultButton(QMessageBox.Yes)
+
+        return message_box.exec()

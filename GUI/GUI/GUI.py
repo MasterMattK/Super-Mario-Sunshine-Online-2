@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QTabWidget
+from PySide6.QtWidgets import QMainWindow, QTabWidget, QMessageBox
 from PySide6.QtGui import QCloseEvent, Qt, QDesktopServices
 from PySide6 import QtGui
 from PySide6.QtCore import Signal, QThread, QUrl
@@ -11,12 +11,13 @@ import os
 import sys
 import logging
 import traceback
+import requests
 
 from GUI.ConsoleDockedWidgets import ClientConsole, ServerConsole
 from GUI.SettingsWidget import SettingsTab
 from GUI.ClientTabWidget import ClientActionsTab
 from GUI.ServerTabWidget import ServerActionsTab
-from GUI.ExtraWidgets import PopUpBox
+from GUI.ExtraWidgets import PopUpBox, ExceptionPopUpBox
 from GUI.Commands import ServerCommands, ClientCommands
 from Client.Client import Client
 from Server.Server import Server
@@ -166,9 +167,29 @@ class MainWindow(QMainWindow):
                 self.close()
             elif self.exception_popup:
                 self.exception_popup = False
-                PopUpBox.display("An error has occured in the program! It was written to exceptions.log", PopUpBoxTypes.ERROR,
-                                 self.exception_traceback)
-                self.exception_traceback = ''
+                result = ExceptionPopUpBox.display(
+                    "An error has occured in the program! Would you like to submit this exception to the " +
+                    "Super Mario Sunshine Online team to help improve the program?", self.exception_traceback)
+
+                if result == QMessageBox.Yes:
+                    # URL found in the action attribute of the form tag
+                    form_url = "https://docs.google.com/forms/d/e/1FAIpQLSfZW6-mIitqcUTcj6SJcKB8-pG-S9wh6V_9VlD1CyUSNKPGhg/formResponse"
+
+                    # Dictionary containing form data
+                    form_data = {
+                        'entry.1609133063': self.exception_traceback
+                    }
+
+                    # Sending post request to the form
+                    response = requests.post(form_url, data=form_data)
+
+                    # Checking the response
+                    if response.status_code == 200:
+                        PopUpBox.display("Error submitted successfully! Click ok to exit the program...", PopUpBoxTypes.INFO)
+                    else:
+                        PopUpBox.display("Error could not be submitted successfully... It has been written to exceptions.log if you'd like to manually report it", 
+                                         PopUpBoxTypes.ERROR)
+
                 self.close()
 
 
