@@ -270,14 +270,21 @@ class Client(QObject):
     def client_connect(self, ip: str, port: int) -> None:
         self.console_msg.emit("Attempting to connect to the host!", ConsoleTypes.CONNECT)
         data = {"dataType": ServerRcvDataTypes.CONNECT.value, "username": self.username, "model": self.model, "version": self.version}
-        if self.network.connect(ip, port, data):
-            self.is_connected = True
-            self.console_msg.emit("Successfully connected to the host!", ConsoleTypes.CONNECT)
-            self.connection_succeeded.emit()
-            self.memory.write_u8(InGameVars.CONNECTED, 1)
-        else:
+
+        try:
+            connection_successful = self.network.connect(ip, port, data)
+            if connection_successful:
+                self.is_connected = True
+                self.console_msg.emit("Successfully connected to the host!", ConsoleTypes.CONNECT)
+                self.connection_succeeded.emit()
+                self.memory.write_u8(InGameVars.CONNECTED, 1)
+            else:
+                self.is_connected = False
+                self.console_msg.emit("Unsuccessful in connecting to the host!", ConsoleTypes.ERROR)
+                self.connection_failed.emit()
+        except IOError:
             self.is_connected = False
-            self.console_msg.emit("Unsuccessful in connecting to the host!", ConsoleTypes.ERROR)
+            self.console_msg.emit("Servicing error in connecting to the host! Trying again may help...", ConsoleTypes.ERROR)
             self.connection_failed.emit()
 
     def client_disconnect(self) -> None:
