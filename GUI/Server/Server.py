@@ -3,6 +3,8 @@ from time import sleep
 from threading import Thread, Lock
 import json
 import enet
+import sys
+import traceback
 
 from Server.ServerData import FlagSync, Player
 from Misc.Network import NetworkServer
@@ -10,6 +12,7 @@ from Misc.DataTypes import ClientRcvDataTypes, ServerRcvDataTypes, DisconnectSou
 from Misc.LevelData import LevelData
 
 class Server(QObject):
+    exception_occurred = Signal(type, BaseException, type(traceback))
     console_msg = Signal(str, ConsoleTypes)
     server_started = Signal()
     server_stopped = Signal()
@@ -174,47 +177,51 @@ class Server(QObject):
         self.manhunt_stopped.emit()
 
     def server_receive(self) -> None:
-        while self.running:
-            sleep(1/1920)
-            event = self.network.receive()
+        try:
+            while self.running:
+                sleep(1/1920)
+                event = self.network.receive()
 
-            if event.type == enet.EVENT_TYPE_NONE:
-                continue
+                if event.type == enet.EVENT_TYPE_NONE:
+                    continue
 
-            # connection is handled below in EVENT_TYPE_RECEIVE so that data can be sent with it
-            elif event.type == enet.EVENT_TYPE_CONNECT:
-                continue
+                # connection is handled below in EVENT_TYPE_RECEIVE so that data can be sent with it
+                elif event.type == enet.EVENT_TYPE_CONNECT:
+                    continue
 
-            elif event.type == enet.EVENT_TYPE_DISCONNECT:
-                if event.data == DisconnectSource.DEFAULT.value:
-                    self.console_msg.emit(f"{self.player_data[event.peer.incomingPeerID].username} has disconnected from the server!", ConsoleTypes.DISCONNECT)
-                elif event.data == DisconnectSource.VERSION.value:
-                    self.console_msg.emit("The client's SMSO version is not compatible with yours!", ConsoleTypes.DISCONNECT)
-                else:
-                    self.console_msg.emit(f"{self.player_data[event.peer.incomingPeerID].username} has disconnected from the server!", ConsoleTypes.DISCONNECT)
+                elif event.type == enet.EVENT_TYPE_DISCONNECT:
+                    if event.data == DisconnectSource.DEFAULT.value:
+                        self.console_msg.emit(f"{self.player_data[event.peer.incomingPeerID].username} has disconnected from the server!", ConsoleTypes.DISCONNECT)
+                    elif event.data == DisconnectSource.VERSION.value:
+                        self.console_msg.emit("The client's SMSO version is not compatible with yours!", ConsoleTypes.DISCONNECT)
+                    else:
+                        self.console_msg.emit(f"{self.player_data[event.peer.incomingPeerID].username} has disconnected from the server!", ConsoleTypes.DISCONNECT)
 
-                self.player_data[event.peer.incomingPeerID] = Player(event.peer.incomingPeerID)
+                    self.player_data[event.peer.incomingPeerID] = Player(event.peer.incomingPeerID)
 
-                disconnect_data = {'dataType': ClientRcvDataTypes.DISCONNECT.value, 'incoming_peer_id': event.peer.incomingPeerID}
-                other_peers = self.network.get_other_peers(event.peer.incomingPeerID)
-                for peer in other_peers:
-                    self.network.send(json.dumps(disconnect_data), peer)
+                    disconnect_data = {'dataType': ClientRcvDataTypes.DISCONNECT.value, 'incoming_peer_id': event.peer.incomingPeerID}
+                    other_peers = self.network.get_other_peers(event.peer.incomingPeerID)
+                    for peer in other_peers:
+                        self.network.send(json.dumps(disconnect_data), peer)
 
-                self.usernames_updated.emit([player.username for player in self.player_data if player.connected])
+                    self.usernames_updated.emit([player.username for player in self.player_data if player.connected])
 
-                # these two rely on all connected players meeting a condition, so when someone disconnects we need to check this
-                if self.gamemode == GamemodeTypes.DEFAULT.value:
-                    self.check_flag_reset_status()
-                elif self.gamemode == GamemodeTypes.TAG.value:
-                    self.check_tag_end()
+                    # these two rely on all connected players meeting a condition, so when someone disconnects we need to check this
+                    if self.gamemode == GamemodeTypes.DEFAULT.value:
+                        self.check_flag_reset_status()
+                    elif self.gamemode == GamemodeTypes.TAG.value:
+                        self.check_tag_end()
 
-                continue
+                    continue
 
-            elif event.type == enet.EVENT_TYPE_RECEIVE:
-                data = self.network.decode_data(event.packet.data)
-                # this line accesses the function specified by the dataType within self.receive_opts, which is created in __init__(). if the
-                # data type isn't found, it calls self.on_unknown() instead
-                self.receive_opts.get(data.dataType, self.on_unknown)(data, event)
+                elif event.type == enet.EVENT_TYPE_RECEIVE:
+                    data = self.network.decode_data(event.packet.data)
+                    # this line accesses the function specified by the dataType within self.receive_opts, which is created in __init__(). if the
+                    # data type isn't found, it calls self.on_unknown() instead
+                    self.receive_opts.get(data.dataType, self.on_unknown)(data, event)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.exception_occurred.emit(exc_type, exc_value, exc_traceback)
         
     # Connection information received from client
     def on_connect(self, data: dict, event: enet.Event) -> None:

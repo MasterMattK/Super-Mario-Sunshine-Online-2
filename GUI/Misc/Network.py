@@ -1,6 +1,5 @@
 from Misc.DataTypes import DisconnectSource
 from time import sleep
-from Misc.ErrorHandling import ErrorHandling
 import json
 import enet
 
@@ -77,11 +76,7 @@ class NetworkClient:
             sleep(0.1)
             event = self.host.service(0)
 
-
-            """try:
-                raise IOError("Servicing error - probably disconnected.")
-            except Exception as e:
-                ErrorHandling.log_exception(type(e), e, e.__traceback__)"""
+            #raise IOError("Servicing error - probably disconnected.")
 
             if event.type == enet.EVENT_TYPE_CONNECT:
                 self.send(json.dumps(data), reliable=True)

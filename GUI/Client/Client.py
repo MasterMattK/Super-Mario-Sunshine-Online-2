@@ -7,6 +7,7 @@ import os
 import enet
 import psutil
 import sys
+import traceback
 
 from Client.DolphinMemoryLib import Dolphin
 from Client.InGameVars import InGameVars
@@ -21,6 +22,7 @@ class Client(QObject):
     ####### SIGNALS #######
     #######################
 
+    exception_occurred = Signal(type, BaseException, type(traceback))
     console_msg = Signal(str, ConsoleTypes)
     client_started = Signal()
     client_stopped = Signal()
@@ -373,46 +375,50 @@ class Client(QObject):
     ##############################
 
     def client_receive(self) -> None:
-        while self.running:
-            sleep(1/1920)
-            if self.is_connected == False:
-                continue
+        try:
+            while self.running:
+                sleep(1/1920)
+                if self.is_connected == False:
+                    continue
 
-            self.update_flag_data()
+                self.update_flag_data()
 
-            event = self.network.receive()
+                event = self.network.receive()
 
-            if event.type == enet.EVENT_TYPE_NONE:
-                continue
+                if event.type == enet.EVENT_TYPE_NONE:
+                    continue
 
-            elif event.type == enet.EVENT_TYPE_CONNECT:
-                self.console_msg.emit(f"You have connected to the server!", ConsoleTypes.CONNECT)
-                continue
-            elif event.type == enet.EVENT_TYPE_DISCONNECT:
-                if event.data == DisconnectSource.DEFAULT.value:
-                    self.console_msg.emit(f"You have been disconnected from the server!", ConsoleTypes.DISCONNECT)
-                elif event.data == DisconnectSource.SVR_END.value:
-                    self.console_msg.emit(f"You have been disconnected! The server has ended!", ConsoleTypes.DISCONNECT)
-                elif event.data == DisconnectSource.SVR_KICK.value:
-                    self.console_msg.emit(f"You have been kicked from the server!", ConsoleTypes.DISCONNECT)
-                elif event.data == DisconnectSource.VERSION.value:
-                    self.console_msg.emit(f"Your version of SMSO is not compatible with the server!", ConsoleTypes.DISCONNECT)
-                else:
-                    self.console_msg.emit(f"You have been disconnected from the server!", ConsoleTypes.DISCONNECT)
-                
-                for i, player in enumerate(self.player_data):
-                    self.player_data[i] = Player(i)
+                elif event.type == enet.EVENT_TYPE_CONNECT:
+                    self.console_msg.emit(f"You have connected to the server!", ConsoleTypes.CONNECT)
+                    continue
+                elif event.type == enet.EVENT_TYPE_DISCONNECT:
+                    if event.data == DisconnectSource.DEFAULT.value:
+                        self.console_msg.emit(f"You have been disconnected from the server!", ConsoleTypes.DISCONNECT)
+                    elif event.data == DisconnectSource.SVR_END.value:
+                        self.console_msg.emit(f"You have been disconnected! The server has ended!", ConsoleTypes.DISCONNECT)
+                    elif event.data == DisconnectSource.SVR_KICK.value:
+                        self.console_msg.emit(f"You have been kicked from the server!", ConsoleTypes.DISCONNECT)
+                    elif event.data == DisconnectSource.VERSION.value:
+                        self.console_msg.emit(f"Your version of SMSO is not compatible with the server!", ConsoleTypes.DISCONNECT)
+                    else:
+                        self.console_msg.emit(f"You have been disconnected from the server!", ConsoleTypes.DISCONNECT)
+                    
+                    for i, player in enumerate(self.player_data):
+                        self.player_data[i] = Player(i)
 
-                self.is_connected = False
-                self.disconnection_succeeded.emit()
-                self.usernames_updated.emit([player.username for player in self.player_data if player.connected])
-                continue
+                    self.is_connected = False
+                    self.disconnection_succeeded.emit()
+                    self.usernames_updated.emit([player.username for player in self.player_data if player.connected])
+                    continue
 
-            elif event.type == enet.EVENT_TYPE_RECEIVE:
-                data = self.network.decode_data(event.packet.data)
-                # this line accesses the function specified by the dataType within self.receive_opts, which is created in __init__(). if the
-                # data type isn't found, it calls self.on_unknown() instead
-                self.receive_opts.get(data.dataType, self.on_unknown)(data, event)
+                elif event.type == enet.EVENT_TYPE_RECEIVE:
+                    data = self.network.decode_data(event.packet.data)
+                    # this line accesses the function specified by the dataType within self.receive_opts, which is created in __init__(). if the
+                    # data type isn't found, it calls self.on_unknown() instead
+                    self.receive_opts.get(data.dataType, self.on_unknown)(data, event)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.exception_occurred.emit(exc_type, exc_value, exc_traceback)
 
     # data about all other clients when you connect
     def on_self_connect(self, data: dict, event: enet.Event) -> None:
@@ -787,17 +793,21 @@ class Client(QObject):
     ###########################
 
     def client_send_loop(self) -> None:
-        while self.running:
-            for frame in range(30):
-                sleep(1/30)
-                if self.memory.read_u32(0x82500000) == 0:   # check if models have already been injected
-                    self.inject_models()
-                if self.is_connected == False:
-                    break
-                if self.memory.read_u8(InGameVars.SEND_DAMAGE_SOUND) == 1:
-                    self.send_damage_sound()
-                self.send_cli_data()
-                self.handle_gamemode(frame)
+        try:
+            while self.running:
+                for frame in range(30):
+                    sleep(1/30)
+                    if self.memory.read_u32(0x82500000) == 0:   # check if models have already been injected
+                        self.inject_models()
+                    if self.is_connected == False:
+                        break
+                    if self.memory.read_u8(InGameVars.SEND_DAMAGE_SOUND) == 1:
+                        self.send_damage_sound()
+                    self.send_cli_data()
+                    self.handle_gamemode(frame)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.exception_occurred.emit(exc_type, exc_value, exc_traceback)
 
     def send_cli_data(self) -> None:
         self.client_data.update_data()

@@ -7,7 +7,10 @@ import qdarktheme
 from subprocess import Popen
 import socket   # only used to find available IPs
 from os import path
+import os
 import sys
+import logging
+import traceback
 
 from GUI.ConsoleDockedWidgets import ClientConsole, ServerConsole
 from GUI.SettingsWidget import SettingsTab
@@ -37,6 +40,8 @@ class MainWindow(QMainWindow):
     # initializes QMainWindow and sub widgets, as well as some member vars
     def __init__(self) -> None:
         super().__init__()
+        self.setup_excepthook()
+
         qdarktheme.setup_theme()
 
         self.directory = path.abspath(path.dirname(sys.argv[0]))
@@ -68,8 +73,67 @@ class MainWindow(QMainWindow):
         self.server_thread = None
 
         self.shutdown_in_progress = False
+        self.exception_popup = False
+        self.exception_traceback = ''
 
         self.populate_fields()
+
+    # this function creates an excepthook so that we can log exceptions and create popups when one occurs.
+    # we also want to eventually give the option to report these exceptions to a google form when they occur
+    def setup_excepthook(self) -> None:
+        # get the directory path of the script being executed
+        script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+        log_file_path = os.path.join(script_dir, "exceptions.log")
+
+        # create a custom formatter that includes a timestamp
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+
+        # create a file handler and set the formatter
+        file_handler = logging.FileHandler(log_file_path)
+        file_handler.setFormatter(formatter)
+
+        # add the file handler to the logger
+        logger = logging.getLogger()
+        logger.addHandler(file_handler)
+
+        # set the global exception handler
+        sys.excepthook = self.handle_exception
+
+    # this function is called when an uncalled exception happens. We cleanup the threads before displaying the popup
+    # in the onServerOrClientDestroyed function 
+    def handle_exception(self, exc_type, exc_value, exc_traceback) -> None:
+        client_running = self.client_thread is not None and self.client_thread.isRunning()
+        server_running = self.server_thread is not None and self.server_thread.isRunning()
+
+        if client_running or server_running:
+            if client_running:
+                self.stop_client.emit()
+
+            if server_running:
+                self.stop_server.emit()
+
+            self.exception_popup = True
+
+            if client_running:
+                self.client_thread.destroyed.connect(self.onServerOrClientDestroyed)
+            if server_running:
+                self.server_thread.destroyed.connect(self.onServerOrClientDestroyed)
+
+        # Extract and modify the traceback to remove user paths
+        modified_traceback = []
+        for filename, lineno, name, line in traceback.extract_tb(exc_traceback):
+            safe_filename = os.path.basename(filename)
+            modified_traceback.append((safe_filename, lineno, name, line))
+
+        # Format the modified traceback
+        formatted_traceback = ''.join(traceback.format_list(modified_traceback))
+
+        # Log the exception type and message along with the modified traceback
+        exception_message = f"{exc_type.__name__}: {exc_value}"
+        logging.error(f"Uncaught exception: {exception_message}\nModified traceback:\n{formatted_traceback}")
+
+        # Store the formatted exception with the modified traceback for further use
+        self.exception_traceback = f"{exception_message}\n{formatted_traceback}"
 
     # we need to make sure to clean up the client and server threads before exiting
     def closeEvent(self, event: QCloseEvent) -> None:
@@ -100,6 +164,13 @@ class MainWindow(QMainWindow):
             if self.shutdown_in_progress:
                 self.shutdown_in_progress = False
                 self.close()
+            elif self.exception_popup:
+                self.exception_popup = False
+                PopUpBox.display("An error has occured in the program! It was written to exceptions.log", PopUpBoxTypes.ERROR,
+                                 self.exception_traceback)
+                self.exception_traceback = ''
+                self.close()
+
 
     # create menubar with necessary options and connect signals
     def init_menubar(self):
@@ -257,6 +328,7 @@ class MainWindow(QMainWindow):
         self.client.destroyed.connect(self.client_thread.quit)
         self.client_thread.finished.connect(self.client_thread.deleteLater)
         self.client_thread.destroyed.connect(self.on_client_deleted)
+        self.client.exception_occurred.connect(self.handle_exception)
 
         # set up general client signals and slots
         self.client.console_msg.connect(self.client_console.client_io_widget.output)
@@ -433,6 +505,7 @@ class MainWindow(QMainWindow):
         self.server.destroyed.connect(self.server_thread.quit)
         self.server_thread.finished.connect(self.server_thread.deleteLater)
         self.server_thread.destroyed.connect(self.on_server_deleted)
+        self.server.exception_occurred.connect(self.handle_exception)
 
         # set up general server signals and slots
         self.server.console_msg.connect(self.server_console.server_io_widget.output)
