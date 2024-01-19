@@ -11,7 +11,7 @@ old_stdout = sys.stdout # backup current stdout
 
 def patch_osarena_low(dol, size):
     #800eb370
-    size += 0x100 # i want to have some padding to have variables initialized as 0 (doesn't work without padding)
+    size += 0x300 # i want to have some padding to have variables initialized as 0 (doesn't work without padding)
     dol.seek(0x80341eac) # OSinit before calling OSSetarenalo
     write_lis(dol, 3, size >> 16, signed=False)
     write_ori(dol, 3, 3, size & 0xFFFF)
@@ -85,6 +85,8 @@ p.branch(0x80256790, "stopPosUpdate2")
 p.branch(0x80244e70, "updateFlags")
 p.branchlink(0x801482d8, "allowShineDecrement")
 p.branchlink(0x801475c0, "allowBlueDecrement")
+p.branchlink(0x802c66cc, "logExceptionContext")
+p.branchlink(0x802c75a4, "printSMSOErrorNotice")
 
 p.branch(0x8024dfb4, "yoshi1")
 p.branch(0x8026ed2c, "yoshi2")

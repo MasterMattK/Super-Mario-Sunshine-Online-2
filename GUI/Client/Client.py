@@ -22,7 +22,8 @@ class Client(QObject):
     ####### SIGNALS #######
     #######################
 
-    exception_occurred = Signal(type, BaseException, type(traceback))
+    gui_exception_occurred = Signal(type, BaseException, type(traceback))
+    game_exception_occured = Signal(str)
     console_msg = Signal(str, ConsoleTypes)
     client_started = Signal()
     client_stopped = Signal()
@@ -425,7 +426,7 @@ class Client(QObject):
                     self.receive_opts.get(data.dataType, self.on_unknown)(data, event)
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            self.exception_occurred.emit(exc_type, exc_value, exc_traceback)
+            self.gui_exception_occurred.emit(exc_type, exc_value, exc_traceback)
 
     # data about all other clients when you connect
     def on_self_connect(self, data: dict, event: enet.Event) -> None:
@@ -804,6 +805,8 @@ class Client(QObject):
             while self.running:
                 for frame in range(30):
                     sleep(1/30)
+
+                    self.check_for_exception()
                     if self.memory.read_u32(0x82500000) == 0:   # check if models have already been injected
                         self.inject_models()
                     if self.is_connected == False:
@@ -814,7 +817,7 @@ class Client(QObject):
                     self.handle_gamemode(frame)
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            self.exception_occurred.emit(exc_type, exc_value, exc_traceback)
+            self.gui_exception_occurred.emit(exc_type, exc_value, exc_traceback)
 
     def send_cli_data(self) -> None:
         self.client_data.update_data()
@@ -845,5 +848,44 @@ class Client(QObject):
         if frame == 0 and self.queued_flag_updates.empty():
             self.flag_data.update_data()
             self.network.send(self.flag_data.to_json())
+
+    # if sms experiences an unhandled exception, the GUI should intercept it here
+    def check_for_exception(self) -> None:
+        o = InGameVars.OS_CONTEXT
+
+        if self.memory.read_u8(o) == 1:
+            exception_context = ""
+            exception_context += f"CONTEXT:{self.memory.read_u32(o + 0x4):08X}H   ({self.memory.read_string(o + 0x8)} EXCEPTION)\n"
+            exception_context += f"SRR0:   {self.memory.read_u32(o + 0xC):08X}H   SRR1:{self.memory.read_u32(o + 0x10):08X}H\n"
+            exception_context += f"DSISR:  {self.memory.read_u32(o + 0x14):08X}H   DAR:{self.memory.read_u32(o + 0x18):08X}H\n"
+
+            exception_context += "-------------------------------------- GPR\n"
+            for i in range(10):
+                exception_context += f"R{i:02d}:{self.memory.read_u32(o + 0x1C + i*4):08X}H  R{i+11:02d}:{self.memory.read_u32(o + 0x1C + 44 + i*4):08X}H  R{i+22:02d}:{self.memory.read_u32(o + 0x1C + 88 + i*4):08X}H\n"
+
+            exception_context += f"R{10:02d}:{self.memory.read_u32(o + 0x1C + 40):08X}H  R{21:02d}:{self.memory.read_u32(o + 0x1C + 84):08X}H\n"
+
+            exception_context += "-------------------------------------- FPR\n"
+            for i in range(10):
+                exception_context += f"F{i:02d}:{self.memory.read_f64(o + 0xA0 + i*8):10.3g} F{i+11:02d}:{self.memory.read_f64(o + 0xA0 + 44 + i*8):10.3g} F{i+22:02d}:{self.memory.read_f64(o + 0xA0 + 88 + i*8):10.3g}\n"
+
+            exception_context += f"F{10:02d}:{self.memory.read_f64(o + 0xA0 + 80):10.3g} F{21:02d}:{self.memory.read_f64(o + 0xA0 + 168):10.3g}\n"
+
+            exception_context += "-------------------------------------- TRACE\n"
+            exception_context += "Address:   BackChain   LR save\n"
+            for i in range(10):
+                address = self.memory.read_u32(o + 0x1A8 + i*12)
+                back_chain = self.memory.read_u32(o + 0x1AC + i*12)
+                lr_save = self.memory.read_u32(o + 0x1B0 + i*12)
+
+                if address == 0: break
+
+                exception_context += f"{address:08X}:  {back_chain:08X}    {lr_save:08X}\n"
+
+            exception_context += "--------------------------------------\n"
+
+            self.game_exception_occured.emit(exception_context)
+ 
+            self.memory.write_u8(o, 0)
 
         

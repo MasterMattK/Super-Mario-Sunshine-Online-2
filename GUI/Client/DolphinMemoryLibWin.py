@@ -180,6 +180,27 @@ class Dolphin(QObject):
             return 0
         value = self.read_ram(addr - 0x80000000, 8)
         return unpack(">d", value)[0]
+    
+    # be super careful using this function as it doesn't do much error checking.
+    # possible errors could arise from invalid pointers or invalid strings in general
+    def read_string(self, addr_ptr: int, limit: int=50) -> str:
+        if addr_ptr < self.MEM_START or addr_ptr > self.MEM_END:
+            return ""
+
+        addr = self.read_u32(addr_ptr)
+
+        data = bytearray()
+        count = 0
+        while count < limit:
+            char = self.read_u8(addr)
+            if char == 0:
+                break
+            data.append(char)
+            addr += 1
+            count += 1
+
+        return data.decode('shift-jis')
+
 
 
     def write_u8(self, addr: int, val: int) -> None:

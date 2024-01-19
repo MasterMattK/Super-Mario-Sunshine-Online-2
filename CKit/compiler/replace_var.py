@@ -4,7 +4,7 @@ varsToGet = [("gamemode", "GAMEMODE"), ("tagActive", "TAG_ACTIVE"), ("isTagger",
 	("connected", "CONNECTED"), ("marios", "MARIOS"), ("bmdPointers", "BMD_POINTERS"), ("modelIndex", "MODEL_INDEX"), ("musicVolume", "MUSIC_VOLUME"), 
 	("fluddRefills", "FLUDD_REFILLS"), ("currentTime", "CURRENT_TIME"), ("flagToUpdate", "FLAG_TO_UPDATE"), ("bResetFlags", "RESET_FLAGS"),
 	("tagReset", "TAG_RESET"), ("manhuntActive", "MANHUNT_ACTIVE"), ("isHunter", "IS_HUNTER"), ("manhuntReset", "MANHUNT_RESET"),
-	("sendDamageSound", "SEND_DAMAGE_SOUND"), ("receiveDamageSound", "RECEIVE_DAMAGE_SOUND")]  # specify which var addresses to look for, and what to name them in the script
+	("sendDamageSound", "SEND_DAMAGE_SOUND"), ("receiveDamageSound", "RECEIVE_DAMAGE_SOUND"), ("osContext", "OS_CONTEXT")]  # specify which var addresses to look for, and what to name them in the script
 
 with open(mapDir) as m:
     mapLines = m.readlines()

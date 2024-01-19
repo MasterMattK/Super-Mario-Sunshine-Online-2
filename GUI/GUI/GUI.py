@@ -177,6 +177,7 @@ class MainWindow(QMainWindow):
 
                     # Dictionary containing form data
                     form_data = {
+                        'entry.1755105852': 'GUI-based',
                         'entry.1609133063': self.exception_traceback
                     }
 
@@ -349,9 +350,10 @@ class MainWindow(QMainWindow):
         self.client.destroyed.connect(self.client_thread.quit)
         self.client_thread.finished.connect(self.client_thread.deleteLater)
         self.client_thread.destroyed.connect(self.on_client_deleted)
-        self.client.exception_occurred.connect(self.handle_exception)
+        self.client.gui_exception_occurred.connect(self.handle_exception)
 
         # set up general client signals and slots
+        self.client.game_exception_occured.connect(self.on_game_exception_occured)
         self.client.console_msg.connect(self.client_console.client_io_widget.output)
         self.client.client_started.connect(self.on_client_started)
         self.client.client_stopped.connect(self.on_client_stopped)
@@ -380,6 +382,32 @@ class MainWindow(QMainWindow):
         self.client_commands.on_teleport_sig.connect(self.client.on_teleport_sig)
 
         self.client_thread.start()
+
+    def on_game_exception_occured(self, exception_context: str) -> None:
+        logging.error(f"Uncaught Exception (in SMS)\n{exception_context}")
+        result = ExceptionPopUpBox.display(
+            "An error in the SMS code itself has been detected! Would you like to submit this exception to the " +
+            "Super Mario Sunshine Online team to help improve the program?", exception_context)
+
+        if result == QMessageBox.Yes:
+            # URL found in the action attribute of the form tag
+            form_url = "https://docs.google.com/forms/d/e/1FAIpQLSfZW6-mIitqcUTcj6SJcKB8-pG-S9wh6V_9VlD1CyUSNKPGhg/formResponse"
+
+            # Dictionary containing form data
+            form_data = {
+                'entry.1755105852': 'SMS-based',
+                'entry.1609133063': exception_context
+            }
+
+            # Sending post request to the form
+            response = requests.post(form_url, data=form_data)
+
+            # Checking the response
+            if response.status_code == 200:
+                PopUpBox.display("Error submitted successfully!", PopUpBoxTypes.INFO)
+            else:
+                PopUpBox.display("Error could not be submitted successfully... It has been written to exceptions.log if you'd like to manually report it", 
+                                    PopUpBoxTypes.ERROR)
 
     # let the user know the client has successfully started
     def on_client_started(self) -> None:
