@@ -36,6 +36,7 @@ p.add_file("../source/yoshi.c")
 p.add_file("../source/marioInteraction.c")
 p.add_file("../source/manhunt.c")
 p.add_file("../source/gamemode.c")
+p.add_file("../source/print.c")
 #p.add_file("../source/debug.c")
 #p.add_file("../source/spectate.c")
 
@@ -115,7 +116,6 @@ p.branch(0x80281b14, "headJump1")
 p.branch(0x80243324, "headJump2")
 p.branch(0x80282644, "headJump3")
 
-p.branch(0x80252bac, "tagMain")
 p.branchlink(0x8014b140, "setTimerSetup")
 p.branchlink(0x80148414, "addPreviousTime")
 #p.branch(0x8028aee4, "killMarioCheck")
@@ -154,10 +154,9 @@ p.branchlink(0x802821a8, "stopRefill30")
 #p.branchlink(0x8024ec2c, "stopRefill31")
 
 #p.branchlink(0x80299d04, "drawTeamTriangle")
+p.branch(0x80252bac, "gamemodeMain")
 p.branch(0x8024db08, "marioDrawMain")
 p.branch(0x8029a318, "hasCutsceneStarted")
-
-p.branch(0x80253220, "manhuntMain")
 
 with open(".\\dol_path.txt", "r") as f:
     dol_path = f.readline()

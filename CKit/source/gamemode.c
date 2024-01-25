@@ -1,6 +1,23 @@
 // this file is for shared resources between the gamemodes
 #include "defines.h"
 
+gamemodes gamemode = DEFAULT;
+
+void gamemodeMain() {
+	switch (gamemode) {
+		case DEFAULT:
+			break;
+		case TAG:
+			tagMain();
+			break;
+		case MANHUNT:
+			manhuntMain();
+			break;
+	}
+
+	displayGameStatus();
+}
+
 // this function links onto TMario::perform which allows us access to TGraphics
 void marioDrawMain() {
 	u32 performFlag = fromRegister(29);
@@ -33,15 +50,15 @@ void GXSetBlendMode(u8 type, u8 src_fact, u8 dst_fact, u8 op);
 // draws a color-coded triangle above other marios' heads to indicate team
 void drawTeamTriangle(float *mario, u32 performFlag, u32 *TGraphics) {
 
-	if (gamemode == 0)				// if the gamemode isn't tag or manhunt, don't continue
+	if (gamemode == DEFAULT)				// if the gamemode isn't tag or manhunt, don't continue
 		return;
 
 	u8 shirtFlag = ((u8 *)mario)[0x119];
 
-	if (gamemode == 1 && isTagger && !(shirtFlag & 16))	// during Tag/HnS, make hider triangles only appear to other hiders
+	if (gamemode == TAG && isTagger && !(shirtFlag & 16))	// during Tag/HnS, make hider triangles only appear to other hiders
 		return;
 
-	if (gamemode == 2 && isHunter && !(shirtFlag & 16))	// during manhunt, make hider triangles only appear to other hiders
+	if (gamemode == MANHUNT && isHunter && !(shirtFlag & 16))	// during manhunt, make hider triangles only appear to other hiders
 		return;
 
   	float* cameraMatrix;
@@ -127,4 +144,34 @@ void drawTeamTriangle(float *mario, u32 performFlag, u32 *TGraphics) {
 bool cutsceneCooldownPending = false;
 void hasCutsceneStarted() {
 	cutsceneCooldownPending = true;
+}
+
+void displayGameStatus()
+{
+	if (gamemode == DEFAULT)
+		return;
+
+	if (gamemode == TAG)
+	{
+		if (tagActive)
+		{
+			initPrint(gPrint, GREEN, 2);
+			printInternal(gPrint, 0, 100, "%s", "Tag is going!");
+		} else 
+		{
+			initPrint(gPrint, RED, 2);
+			printInternal(gPrint, 0, 100, "%s", "Tag is stopped!");
+		}
+	}
+
+	if (gamemode == MANHUNT)
+		if (manhuntActive)
+		{
+			initPrint(gPrint, GREEN, 2);
+			printInternal(gPrint, 0, 100, "%s", "Manhunt is going!");
+		} else 
+		{
+			initPrint(gPrint, RED, 2);
+			printInternal(gPrint, 0, 100, "%s", "Manhunt is stopped!");
+		}
 }

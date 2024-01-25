@@ -1,7 +1,5 @@
 #include "defines.h"
 
-static u32 gPrint[(0x90 / 4)] = { [0 ... 0x80 / 4] = 0xff0000ff };  // stuff for printing (thx brocoli)
-
 void initPrint(u32* j2dprint, u32 color, int fontSize)
 {
     u32* font = SDAword(-0x6038);
@@ -27,16 +25,4 @@ void initPrintDefaultSize(u32* j2dprint, u32 color)
     initiatePrint(j2dprint);
     gPrint[0x40 / 4] = color;
     gPrint[0x44 / 4] = color;
-}
-
-void printString(char *s)
-{
-    initPrint(gPrint, GREEN, 2);
-    printInternal(gPrint, 0, 100, "%s", s);
-}
-
-void printNumber(int n)
-{
-    initPrint(gPrint, GREEN, 2);
-    printInternal(gPrint, 0, 100, "%d", n);
 }

@@ -31,13 +31,19 @@ typedef struct
 
 typedef float Mtx[3][4];
 
+typedef enum gamemodes {
+	DEFAULT,
+	TAG,
+	MANHUNT,
+} gamemodes;
+
 // Player number and mario list
 #define realpNum 6
 extern int pNum;
 extern unsigned int********* marios[realpNum];
-extern int gamemode;
+extern gamemodes gamemode;
 extern unsigned int currentTime;
-extern bool isTagger, isHunter;
+extern bool isTagger, isHunter, tagActive, manhuntActive;
 extern bool cutsceneCooldownPending;
 
 // List of global functions to execute
@@ -47,6 +53,17 @@ extern void printString(char *);
 extern void printNumber(int);
 extern bool playVoice(int soundId);
 extern bool playSound(int soundId);
+extern void initPrint(u32* j2dprint, u32 color, int fontSize);
+extern void tagMain();
+extern void manhuntMain();
+
+static const u32 WHITE = 0xffffff88;
+static const u32 RED = 0xff0000ff;
+static const u32 PURPLE = 0xff00ffff;
+static const u32 GREEN = 0x00ff00fff;
+static const u32 GRAY = 0x777777ff;
+
+static u32 gPrint[(0x90 / 4)] = { [0 ... 0x80 / 4] = 0xff0000ff };  // stuff for printing (thx brocoli)
 
 #define SDA 0x803e4d20
 
