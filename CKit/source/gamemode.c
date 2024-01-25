@@ -146,6 +146,21 @@ void hasCutsceneStarted() {
 	cutsceneCooldownPending = true;
 }
 
+void initPrint(u32* j2dprint, u32 color, int fontSize)
+{
+    u32* font = SDAword(-0x6038);
+    if (font == 0) {
+        font = SDAword(-0x6034);
+    }
+    ct_Print(j2dprint, font, 0);
+    initiatePrint(j2dprint);
+    gPrint[0x40 / 4] = color;
+    gPrint[0x44 / 4] = color;
+    // size
+    gPrint[0x58 / 4] = 9*fontSize;
+    gPrint[0x5c / 4] = 12*fontSize;
+}
+
 void displayGameStatus()
 {
 	if (gamemode == DEFAULT)
@@ -156,11 +171,11 @@ void displayGameStatus()
 		if (tagActive)
 		{
 			initPrint(gPrint, GREEN, 2);
-			printInternal(gPrint, 0, 100, "%s", "Tag is going!");
+			printInternal(gPrint, 0, 40, "%s", "Tag is going!");
 		} else 
 		{
 			initPrint(gPrint, RED, 2);
-			printInternal(gPrint, 0, 100, "%s", "Tag is stopped!");
+			printInternal(gPrint, 0, 40, "%s", "Tag is stopped!");
 		}
 	}
 
@@ -168,10 +183,10 @@ void displayGameStatus()
 		if (manhuntActive)
 		{
 			initPrint(gPrint, GREEN, 2);
-			printInternal(gPrint, 0, 100, "%s", "Manhunt is going!");
+			printInternal(gPrint, 0, 40, "%s", "Manhunt is going!");
 		} else 
 		{
 			initPrint(gPrint, RED, 2);
-			printInternal(gPrint, 0, 100, "%s", "Manhunt is stopped!");
+			printInternal(gPrint, 0, 40, "%s", "Manhunt is stopped!");
 		}
 }
