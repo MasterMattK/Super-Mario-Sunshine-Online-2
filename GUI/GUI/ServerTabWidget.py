@@ -209,14 +209,14 @@ class ServerActionsTab(QScrollArea):
         self.reset_flags_button.clicked.connect(self.on_reset_flags_clicked)
         self.tagger_list.newUsernameDropped.connect(lambda username: self.command.emit(f"/tag add {username}"))
         self.hider_list.newUsernameDropped.connect(lambda username: self.command.emit(f"/tag remove {username}"))
-        self.start_tag_button.clicked.connect(lambda: self.command.emit("/tag start"))
-        self.stop_tag_button.clicked.connect(lambda: self.command.emit("/tag stop"))
+        self.start_tag_button.clicked.connect(self.on_start_tag_clicked)
+        self.stop_tag_button.clicked.connect(self.on_stop_tag_clicked)
         self.reset_tag_button.clicked.connect(self.on_reset_tag_clicked)
         self.disable_refills_checkbutton.clicked.connect(self.on_disable_refills_toggled)
         self.hunter_list.newUsernameDropped.connect(lambda username: self.command.emit(f"/manhunt add {username}"))
         self.runner_list.newUsernameDropped.connect(lambda username: self.command.emit(f"/manhunt remove {username}"))
-        self.start_manhunt_button.clicked.connect(lambda: self.command.emit("/manhunt start"))
-        self.stop_manhunt_button.clicked.connect(lambda: self.command.emit("/manhunt stop"))
+        self.start_manhunt_button.clicked.connect(self.on_start_manhunt_clicked)
+        self.stop_manhunt_button.clicked.connect(self.on_stop_manhunt_clicked)
         self.reset_manhunt_button.clicked.connect(self.on_reset_manhunt_clicked)
 
     def on_flags_edited(self) -> None:
@@ -297,11 +297,20 @@ class ServerActionsTab(QScrollArea):
         if result == QMessageBox.Yes:
             self.command.emit("/flagsreset")
 
+    def on_start_tag_clicked(self) -> None:
+        self.command.emit("/tag start")
+        self.gamemode_combobox.setEnabled(False)
+
+    def on_stop_tag_clicked(self) -> None:
+        self.command.emit("/tag stop")
+        self.gamemode_combobox.setEnabled(True)
+
     def on_reset_tag_clicked(self) -> None:
         result = PopUpBox.display("Are you sure you want to reset this game of tag?\nAll timers will be reset.", 
                          PopUpBoxTypes.CONFIRM)
         if result == QMessageBox.Yes:
             self.command.emit("/tag reset")
+            self.gamemode_combobox.setEnabled(True)
 
     def on_disable_refills_toggled(self, checked: bool) -> None:
         if checked:
@@ -309,11 +318,20 @@ class ServerActionsTab(QScrollArea):
         else:
             self.command.emit("/tag refills on")
 
+    def on_start_manhunt_clicked(self) -> None:
+        self.command.emit("/manhunt start")
+        self.gamemode_combobox.setEnabled(False)
+
+    def on_stop_manhunt_clicked(self) -> None:
+        self.command.emit("/manhunt stop")
+        self.gamemode_combobox.setEnabled(True)
+
     def on_reset_manhunt_clicked(self) -> None:
         result = PopUpBox.display("Are you sure you want to reset this game of manhunt?", 
                          PopUpBoxTypes.CONFIRM)
         if result == QMessageBox.Yes:
             self.command.emit("/manhunt reset")
+            self.gamemode_combobox.setEnabled(True)
     
     def update_username_models(self, username_list: list) -> None:
         self.username_and_all_model.clear()

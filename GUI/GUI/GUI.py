@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
     server_command = Signal((str, Server), ('command', 'server')) # emitted to submit server command
     hm = Signal(str) # this signal is for the hidden model system, which we may remove
 
-    VERSION = '2.2 Beta' # I'm leaving it as a string just in case we ever have something like '2.2a' with a letter in it
+    VERSION = '2.2' # I'm leaving it as a string just in case we ever have something like '2.2a' with a letter in it
 
     # initializes QMainWindow and sub widgets, as well as some member vars
     def __init__(self) -> None:
