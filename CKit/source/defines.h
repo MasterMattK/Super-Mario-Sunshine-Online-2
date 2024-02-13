@@ -45,6 +45,7 @@ extern gamemodes gamemode;
 extern unsigned int currentTime;
 extern bool isTagger, isHunter, tagActive, manhuntActive;
 extern bool cutsceneCooldownPending;
+extern bool widescreen;
 
 // List of global functions to execute
 extern void tag_onStageLoad();

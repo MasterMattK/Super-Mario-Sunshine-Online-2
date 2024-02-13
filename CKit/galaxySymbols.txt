@@ -131,3 +131,5 @@ GXSetBlendMode = 0x80361dd0;
 GXInvalidateTexAll = 0x80360400;
 
 JUTConsole__print_f = 0x802f5da8;
+
+main = 0x80005600;

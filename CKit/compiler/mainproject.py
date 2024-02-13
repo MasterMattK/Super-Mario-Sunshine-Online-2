@@ -46,6 +46,7 @@ p.apply_gecko("extraCode.txt")
 p.branchlink(0x8029d7f8, "makeMarios")
 p.branch(0x80276bd0, "load_MarioTrickyOverhaul")
 
+p.branchlink(0x8000535c, "onGameLoad")
 p.branch(0x80298bac, "onStageLoad")
 
 #p.branch(0x80252bac, "spectateMode")

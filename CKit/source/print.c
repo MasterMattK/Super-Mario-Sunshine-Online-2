@@ -1,5 +1,7 @@
 #include "defines.h"
 
+bool widescreen = false;
+
 // void initPrint(u32* j2dprint, u32 color, int fontSize)
 // {
 //     u32* font = SDAword(-0x6038);

@@ -162,11 +162,11 @@ void displayGameStatus()
 		if (tagActive)
 		{
 			initPrint(gPrint, GREEN, 2);
-			printInternal(gPrint, 0, 40, "%s", "Tag is going!");
+			printInternal(gPrint, -85*widescreen, 40, "%s", "Tag is going!");
 		} else 
 		{
 			initPrint(gPrint, RED, 2);
-			printInternal(gPrint, 0, 40, "%s", "Tag is stopped!");
+			printInternal(gPrint, -85*widescreen, 40, "%s", "Tag is stopped!");
 		}
 	}
 
@@ -174,10 +174,10 @@ void displayGameStatus()
 		if (manhuntActive)
 		{
 			initPrint(gPrint, GREEN, 2);
-			printInternal(gPrint, 0, 40, "%s", "Manhunt is going!");
+			printInternal(gPrint, -85*widescreen, 40, "%s", "Manhunt is going!");
 		} else 
 		{
 			initPrint(gPrint, RED, 2);
-			printInternal(gPrint, 0, 40, "%s", "Manhunt is stopped!");
+			printInternal(gPrint, -85*widescreen, 40, "%s", "Manhunt is stopped!");
 		}
 }
