@@ -35,5 +35,7 @@ del debug.c.o
 del debug.c.s
 del gamemode.c.o
 del gamemode.c.s
+del print.c.o
+del print.c.s
 
 pause

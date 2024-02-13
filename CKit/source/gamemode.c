@@ -4,17 +4,8 @@
 gamemodes gamemode = DEFAULT;
 
 void gamemodeMain() {
-	switch (gamemode) {
-		case DEFAULT:
-			break;
-		case TAG:
-			tagMain();
-			break;
-		case MANHUNT:
-			manhuntMain();
-			break;
-	}
-
+	tagMain();
+	manhuntMain();
 	displayGameStatus();
 }
 
