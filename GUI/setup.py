@@ -30,7 +30,7 @@ options = {
 
 setup (
     name="SMSO",
-    version="2.1",
+    version="2.2",
     description="Super Mario Sunshine Online",
     options=options,
     executables=[main_exe]
