@@ -33,5 +33,5 @@ setup (
     version="2.1",
     description="Super Mario Sunshine Online",
     options=options,
-    executables=[main_exe, updater_exe]
+    executables=[main_exe]
 )
