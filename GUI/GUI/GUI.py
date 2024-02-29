@@ -288,8 +288,9 @@ class MainWindow(QMainWindow):
         about_string += "Special thanks to everyone who has provided help:\n" 
         about_string += "Brocoli (provided SMS co-op source code), Smubs (playtester),\n" 
         about_string += "MithterTheup (playtester), ZenithPunch (playtester), GoogleCheese (playtester, map developer, model maker),\n"
-        about_string += "EpicWade (playtester and map developer), Flauke (playtester), and anyone who has been present in the discord.\n"
-        about_string += "UncleMeat (model maker), GamerSubzero (model maker)\n\n"
+        about_string += "EpicWade (playtester and map developer), Flauke (playtester), and anyone who has been present in the discord,\n"
+        about_string += "UncleMeat (model maker), GamerSubzero (model maker), Snifit8 (model maker), stevenshockley (playtester)\n"
+        about_string += "MasterMario777 (playtester and model maker)\n\n"
 
         about_string += "This software is licensed under the MIT license. You should have received a copy on download."
 
