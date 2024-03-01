@@ -546,7 +546,7 @@ class Client(QObject):
         x != 0x18100340 and x != 0x10100343 and x != 0x00000350 and x != 0x00000351 and x != 0x00000352
         and x != 0x0000035B and x != 0x00000353 and x != 0x0000035C and x != 0x10000357 and 
         x != 0x10000556 and x != 0x10000554 and x != 0x10000358 and x != 0x00810446 and x != 0x10001308
-        and x != 0x00000560 and x != 0x81089B):
+        and x != 0x00000560 and x != 0x81089B and x != 0x281089A):
             self.memory.write_u32(dmy.pDummyMario + 0x7C, data.currentState)
             self.memory.write_u32(dmy.pDummyMario + 0x80, data.previousState)
             self.memory.write_u32(dmy.pDummyMario + 0x84, data.substate)
