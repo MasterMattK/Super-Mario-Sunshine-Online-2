@@ -10,7 +10,7 @@ This is a repository that contains the python-based GUI and sunshine c-kit sourc
         5. Go back to the main Dolphin screen, and now you should be able to see Super Mario Sunshine listed. Right click it and go to Properties->Filesystem.
         6. Right click on Disc and click Extract Entire Disc.
         7. Once this is done, open the folder you extracted it into, and then open the sys folder, and main.dol should be in there.
-  3. Create a txt file called 'dol_path.txt'. Put the file path of wherever you want the output main.dol to be. Don't include quotes. (For example, something like C:\SMSO_DOL\main.dol)
+  3. Create a txt file called 'dol_path.txt' in the CKit/compiler folder. Put the file path of wherever you want the output main.dol to be. Don't include quotes. (For example, something like C:\SMSO_DOL\main.dol)
   4. Change the paths at the top of devkit_tools.py to reflect wherever you installed devKitPPC.
   5. Run buildmain.bat, and it should output a dol to whatever path you specified.
 
