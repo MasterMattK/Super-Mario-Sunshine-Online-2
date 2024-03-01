@@ -299,14 +299,8 @@ class MainWindow(QMainWindow):
     # create settings tab and connect signals
     def init_settings_tab(self) -> None:
         self.settings_tab = SettingsTab()
-        self.settings_tab.launch_path_changed.connect(self.on_path_changed)
         self.settings_tab.set_config.connect(self.config.set_value)
         self.tabs.addTab(self.settings_tab, "Settings")
-
-    # enable the launch button when paths are entered
-    def on_path_changed(self) -> None:
-        if self.config.dolphin_path != '' and self.config.sms_path != '':
-            self.clt_tab.launch_game_button.setEnabled(True)
         
     # create client actions tab and connect signals
     def init_client_tab(self) -> None:
