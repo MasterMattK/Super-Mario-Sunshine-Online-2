@@ -4,7 +4,7 @@ import json
 
 from Client.InGameVars import InGameVars
 from Client.DolphinMemoryLib import Dolphin
-from Misc.DataTypes import ServerRcvDataTypes, TagStatus
+from Misc.DataTypes import ServerRcvDataTypes, TagStatus, ManhuntStatus
 
 # class stored on client to keep track of other players
 class Player:
@@ -14,6 +14,7 @@ class Player:
         self.username = f"Player{index}"
         self.model = "mario"
         self.tag_status = TagStatus.HIDER
+        self.manhunt_status = ManhuntStatus.RUNNER
 
 # this class is what reads and sets all of the client's values every frame to send to the server
 # this is always called on the send thread
@@ -72,7 +73,7 @@ class ClientData:
         # tag timer (so that the server can store your tag time in case of crash)
         self.clientTagTime = self.memory.read_u32(InGameVars.CLIENT_TAG_TIME)
         self.currentTime = self.memory.read_u32(self.pTGCConsole2 + 0x500)
-        self.tagBool = self.memory.read_u32(InGameVars.TAG_BOOL)
+        self.tagBool = self.memory.read_u32(InGameVars.TAG_ACTIVE)
 
         # fludd/yoshi have 3 spraying states: 0 = normal spraying, 1 = spam spray, 2 = no spraying(happens after spam).
         # state 1 happens too quickly for it to properly sync over the server, so we have to set that manually

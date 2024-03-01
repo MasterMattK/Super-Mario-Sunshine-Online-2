@@ -23,6 +23,11 @@ class ClientRcvDataTypes(Enum):
     TOGGLE_REFILLS = 17     # when the server toggles tag refills for hiders
     ALLOW_TPS = 18          # when the server enables or disables tps for clients
     ALLOW_LVL_CHANGES = 19  # when the server enables or disables level changes for clients
+    MANHUNT_STATUS = 20     # server requests manhunt status change
+    START_MANHUNT = 21      # when the server sets starts the actual manhunt gamemode
+    RESET_MANHUNT = 22      # when the server needs to reset a clients tag timer
+    MANHUNT_DMG = 23        # when the server requests runners to play manhunt damage sound
+
 
 # specifies the type of data sent to the server
 class ServerRcvDataTypes(Enum):
@@ -37,6 +42,8 @@ class ServerRcvDataTypes(Enum):
     CHANGE_LEVEL = 8    # a client notifies the server it changed level
     TAG_STATUS = 9      # a client requests a tag status change
     FLAGS_PAUSED = 10   # a client confirms that it has paused flags
+    MANHUNT_STATUS = 11 # a client requests a manhunt status change
+    MANHUNT_DMG = 12    # a manhunt runner indicates they've taken damage from a hunter
 
 # this is used to distinguish between the different forms of disconnection
 class DisconnectSource(Enum):
@@ -71,6 +78,7 @@ class ConsoleTypes(Enum):
 class GamemodeTypes(Enum):
     DEFAULT = 0
     TAG = 1
+    MANHUNT = 2
 
     @staticmethod
     def get_gamemode_from_num(num: int):
@@ -84,6 +92,12 @@ class TagStatus(Enum):
     HIDER = 0
     PENDING_TAGGER = 1
     TAGGER = 2
+    SPECTATOR = 3
+
+class ManhuntStatus(Enum):
+    RUNNER = 0
+    PENDING_HUNTER = 1  # probably don't need this?
+    HUNTER = 2
     SPECTATOR = 3
 
 class ConfigTypes(Enum):

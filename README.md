@@ -1,5 +1,5 @@
-# Super-Mario-Sunshine-Online-2.1
-This is a repository that contains the python-based GUI and sunshine c-kit source code for the Super Mario Sunshine Online 2.X Project
+# Super-Mario-Sunshine-Online-2
+This is a repository that contains the python-based GUI and sunshine c-kit source code for the Super Mario Sunshine Online 2 Project
 
 **Here's how you can compile the c-kit source code:**
   1. Install [devKitPPC](https://github.com/devkitPro/installer/releases). 
@@ -10,10 +10,9 @@ This is a repository that contains the python-based GUI and sunshine c-kit sourc
         5. Go back to the main Dolphin screen, and now you should be able to see Super Mario Sunshine listed. Right click it and go to Properties->Filesystem.
         6. Right click on Disc and click Extract Entire Disc.
         7. Once this is done, open the folder you extracted it into, and then open the sys folder, and main.dol should be in there.
-  3. Change the path at the very bottom of mainproject.py (the line with p.build). Set this to wherever you want the output main.dol to be. 
-  4. Change the paths at the top of devkit_tools.py to reflect wherever you installed devKitPPC. 
-  5. Change the paths at the top of replace_var.py. mapDir is the path to the project.map file which will be created in the compiler folder once you compile the code.  scriptDir is a path to InGameVars.py, which is part of the GUI. This is necessary because it gives the GUI the addresses of variables from the c-kit so that it can interface with the game. 
-  6. Run buildmain.bat, and it should output a dol to whatever path you specified.
+  3. Create a txt file called 'dol_path.txt' in the CKit/compiler folder. Put the file path of wherever you want the output main.dol to be. Don't include quotes. (For example, something like C:\SMSO_DOL\main.dol)
+  4. Change the paths at the top of devkit_tools.py to reflect wherever you installed devKitPPC.
+  5. Run buildmain.bat, and it should output a dol to whatever path you specified.
 
 Credit to RenolY2 for [the python-based c-kit](https://github.com/RenolY2/gc-c-kit) which I've slightly modified for this project.
 

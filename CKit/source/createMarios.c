@@ -8,7 +8,6 @@ int pNum = 1;
 u32********* marios[realpNum] = { [0 ... (realpNum-1)] = -1 };
 
 u32* makeMarios(u32* mario) {
-
 	// this makes it so only 1 mario can spawn on file select
 	char* bob = SDAword(-0x6048);
 	if (bob[0x7c] == 15) {

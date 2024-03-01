@@ -9,12 +9,21 @@ bool bResetFlags = false;
 // updates the currentTimeSec variable every 1/4 frame
 void updateSeconds()
 {
-	static int repeat = 1;
-	if (repeat % 4 == 0)
-	{
-		currentTime++;
-		repeat = 1;
-	} else repeat++;
+	static int repeat = 0;
+    
+    u32** TMario = 0x8040E0E8;
+    u32 realM3UModelMario = TMario[0][0x3A8 / 4];
+    u32 currentM3UModelMario = fromRegister(31);
+
+    // we only want to increment with the original mario
+    if (realM3UModelMario != currentM3UModelMario)
+        return;
+
+    if (repeat == 120)
+    {
+        currentTime++;
+        repeat = 0;
+    } else repeat++;
 }
 
 // this function sets a part of the dummy marios' controller memory to 0, which makes them able to sleep
@@ -250,6 +259,28 @@ void dummyFix16() {
 	__asm("b cEleven");
 }
 
+// doesn't allow the code to check mario controller
+void dummyFix17() {
+	__asm("lis 15, 0x8040");
+	__asm("ori 15, 15, 0xE0E8");
+	__asm("lwz 15, 0(15)");
+	__asm("cmpw 15, 31");
+	__asm("bne 0x8");
+	__asm("lwz 0, 0x00D4 (3)");
+	__asm("b mpNine");
+}
+
+// doesn't allow the code to check mario controller
+void dummyFix18() {
+	__asm("lis 15, 0x8040");
+	__asm("ori 15, 15, 0xE0E8");
+	__asm("lwz 15, 0(15)");
+	__asm("cmpw 15, 31");
+	__asm("bne 0x8");
+	__asm("lwz 0, 0x00D0 (4)");
+	__asm("b mpTen");
+}
+
 // if it's a dummy mario, we don't update mario's position (this is done from script)
 void stopPosUpdate1(u16* mario) {
 	__asm("mr 14, 3");
@@ -357,4 +388,94 @@ void allowShineDecrement() {
 void allowBlueDecrement(u32 internalBlueCount, u32 visualBlueCount) {
 	u32* TGCConsole2 = fromRegister(31);
 	TGCConsole2[0x168 / 4] = internalBlueCount;
+}
+
+typedef struct OSReceiveMessageException
+{
+	u32 funcAddr;
+	u16 exceptionType;
+	u32 *context;
+	u32 DSISR;
+	u32 DAR;
+} OSReceiveMessageException;
+
+typedef struct exceptionContext
+{
+	bool hasExceptionOccured;	// _0
+	u32 context;				// _4
+	char *exceptionType;		// _8
+	u32 SRR0;					// _C
+	u32 SRR1;					// _10
+	u32 DSISR;					// _14
+	u32 DAR;					// _18
+	u32 GPR[32];				// _1C
+	double FPR[32];				// _A0
+	u32 MSR;					// _1A0
+	u32 FPSCR;					// _1A4
+	u32 trace[10][3];			// _1A8
+
+} exceptionContext;
+
+exceptionContext osContext = {
+	false,
+	0,
+	nullptr,
+	0,
+	0,
+	0,
+	0,
+	{0},
+	{0.0},
+	0,
+	0,
+	{{0}}
+};
+
+// this function intercepts exception context info that gets printed on screen when SMS crashes so that it can be read by the GUI and
+// submitted to us via google form
+void logExceptionContext() {
+	OSReceiveMessageException **stack = fromRegister(1); // I have to offset from the stack that the compiler creates for this function
+	OSReceiveMessageException *o = stack[0x1C / 4];
+
+	osContext.context = o->context;
+	osContext.exceptionType = *((char **)(0x803e0238 + (o->exceptionType * 4)));
+	osContext.SRR0 = o->context[0x198 / 4];
+	osContext.SRR1 = o->context[0x19C / 4];
+	osContext.DSISR = o->DSISR;
+	osContext.DAR = o->DAR;
+
+	// get all general purpose register vals
+	for (int i = 0; i < 32; i++) {
+		osContext.GPR[i] = o->context[i];
+	}
+
+	double *doubleContextPtr = (double *)(o->context);
+	// get all floating point register vals
+	for (int i = 0; i < 32; i++) {
+		osContext.FPR[i] = doubleContextPtr[(0x90 / 8) + i];
+	}
+	osContext.MSR = SDAword(-0x5EF0);
+	osContext.FPSCR = SDAword(-0x5EEC);
+
+	u32 *stackPtr = o->context[1]; // get the stack pointer from r1
+	// get the stack trace
+	for (int i = 0; i < 10; i++) {
+		if (stackPtr == 0) break;
+		if (((u32)stackPtr) == 0xffffffff) break; 
+
+		osContext.trace[i][0] = stackPtr;
+		osContext.trace[i][1] = *stackPtr;
+		osContext.trace[i][2] = stackPtr[1];
+		stackPtr = *stackPtr;
+	}
+
+	osContext.hasExceptionOccured = true;
+
+
+	toRegister(3, SDAword(-0x5F08)); // replace instruction where we're inserting
+}
+
+void printSMSOErrorNotice(u32 *JUTConsole) {
+	JUTConsole__print_f(JUTConsole, "HOOK SMSO GUI TO SUBMIT CRASH INFO TO SMSO TEAM!\n\n\n\n");
+	__asm("lwz 5, 0x0060 (31)"); // replace instruction where we're inserting
 }

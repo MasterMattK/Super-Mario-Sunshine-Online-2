@@ -27,5 +27,15 @@ del tag.c.o
 del tag.c.s
 del yoshi.c.o
 del yoshi.c.s
+del manhunt.c.o
+del manhunt.c.s
+del callbacks.c.o
+del callbacks.c.s
+del debug.c.o
+del debug.c.s
+del gamemode.c.o
+del gamemode.c.s
+del print.c.o
+del print.c.s
 
 pause

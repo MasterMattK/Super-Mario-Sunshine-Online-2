@@ -7,12 +7,13 @@ import os
 import enet
 import psutil
 import sys
+import traceback
 
 from Client.DolphinMemoryLib import Dolphin
 from Client.InGameVars import InGameVars
 from Client.ClientData import Player, ClientData, ClientPointers, DummyPointers, FlagData
 from Misc.Network import NetworkClient
-from Misc.DataTypes import ClientRcvDataTypes, ServerRcvDataTypes, DisconnectSource, ConsoleTypes, GamemodeTypes, TagStatus
+from Misc.DataTypes import ClientRcvDataTypes, ServerRcvDataTypes, DisconnectSource, ConsoleTypes, GamemodeTypes, TagStatus, ManhuntStatus
 from Misc.LevelData import LevelData
 
 class Client(QObject):
@@ -21,6 +22,8 @@ class Client(QObject):
     ####### SIGNALS #######
     #######################
 
+    gui_exception_occurred = Signal(type, BaseException, type(traceback))
+    game_exception_occured = Signal(str)
     console_msg = Signal(str, ConsoleTypes)
     client_started = Signal()
     client_stopped = Signal()
@@ -65,6 +68,7 @@ class Client(QObject):
         self.level_data = LevelData()
         self.gamemode = GamemodeTypes.DEFAULT.value
         self.tag_status = TagStatus.HIDER.value
+        self.manhunt_status = ManhuntStatus.RUNNER.value
         self.allow_tps = True
         self.allow_level_changes = True
 
@@ -90,7 +94,11 @@ class Client(QObject):
             ClientRcvDataTypes.RESET_TAG.value: self.on_reset_tag,
             ClientRcvDataTypes.TOGGLE_REFILLS.value: self.on_toggle_refills,
             ClientRcvDataTypes.ALLOW_TPS.value: self.on_allow_tps,
-            ClientRcvDataTypes.ALLOW_LVL_CHANGES.value: self.on_allow_level_changes
+            ClientRcvDataTypes.ALLOW_LVL_CHANGES.value: self.on_allow_level_changes,
+            ClientRcvDataTypes.MANHUNT_STATUS.value: self.on_manhunt_status,
+            ClientRcvDataTypes.START_MANHUNT.value: self.on_start_manhunt,
+            ClientRcvDataTypes.RESET_MANHUNT.value: self.on_reset_manhunt,
+            ClientRcvDataTypes.MANHUNT_DMG.value: self.on_manhunt_damage
         }
 
         self.send_thread = Thread(target=self.client_send_loop)
@@ -162,6 +170,13 @@ class Client(QObject):
         for player in self.player_data:
             if player.connected == True:
                 self.update_dummy_model(player.model, self.peer_id, player.peer_id)
+
+    # called when manhunt runner takes damage
+    def send_damage_sound(self) -> None:
+        if self.is_connected:
+            data = {'dataType': ServerRcvDataTypes.MANHUNT_DMG.value}
+            self.network.send(json.dumps(data))
+            self.memory.write_u8(InGameVars.SEND_DAMAGE_SOUND, 0)
 
     # called from gui thread to update username
     def update_username(self, username: str) -> None:
@@ -256,14 +271,21 @@ class Client(QObject):
     def client_connect(self, ip: str, port: int) -> None:
         self.console_msg.emit("Attempting to connect to the host!", ConsoleTypes.CONNECT)
         data = {"dataType": ServerRcvDataTypes.CONNECT.value, "username": self.username, "model": self.model, "version": self.version}
-        if self.network.connect(ip, port, data):
-            self.is_connected = True
-            self.console_msg.emit("Successfully connected to the host!", ConsoleTypes.CONNECT)
-            self.connection_succeeded.emit()
-            self.memory.write_u8(InGameVars.CONNECTED, 1)
-        else:
+
+        try:
+            connection_successful = self.network.connect(ip, port, data)
+            if connection_successful:
+                self.is_connected = True
+                self.console_msg.emit("Successfully connected to the host!", ConsoleTypes.CONNECT)
+                self.connection_succeeded.emit()
+                self.memory.write_u8(InGameVars.CONNECTED, 1)
+            else:
+                self.is_connected = False
+                self.console_msg.emit("Unsuccessful in connecting to the host!", ConsoleTypes.ERROR)
+                self.connection_failed.emit()
+        except IOError:
             self.is_connected = False
-            self.console_msg.emit("Unsuccessful in connecting to the host!", ConsoleTypes.ERROR)
+            self.console_msg.emit("Servicing error in connecting to the host! Trying again may help...", ConsoleTypes.ERROR)
             self.connection_failed.emit()
 
     def client_disconnect(self) -> None:
@@ -361,46 +383,50 @@ class Client(QObject):
     ##############################
 
     def client_receive(self) -> None:
-        while self.running:
-            sleep(1/1920)
-            if self.is_connected == False:
-                continue
+        try:
+            while self.running:
+                sleep(1/1920)
+                if self.is_connected == False:
+                    continue
 
-            self.update_flag_data()
+                self.update_flag_data()
 
-            event = self.network.receive()
+                event = self.network.receive()
 
-            if event.type == enet.EVENT_TYPE_NONE:
-                continue
+                if event.type == enet.EVENT_TYPE_NONE:
+                    continue
 
-            elif event.type == enet.EVENT_TYPE_CONNECT:
-                self.console_msg.emit(f"You have connected to the server!", ConsoleTypes.CONNECT)
-                continue
-            elif event.type == enet.EVENT_TYPE_DISCONNECT:
-                if event.data == DisconnectSource.DEFAULT.value:
-                    self.console_msg.emit(f"You have been disconnected from the server!", ConsoleTypes.DISCONNECT)
-                elif event.data == DisconnectSource.SVR_END.value:
-                    self.console_msg.emit(f"You have been disconnected! The server has ended!", ConsoleTypes.DISCONNECT)
-                elif event.data == DisconnectSource.SVR_KICK.value:
-                    self.console_msg.emit(f"You have been kicked from the server!", ConsoleTypes.DISCONNECT)
-                elif event.data == DisconnectSource.VERSION.value:
-                    self.console_msg.emit(f"Your version of SMSO is not compatible with the server!", ConsoleTypes.DISCONNECT)
-                else:
-                    self.console_msg.emit(f"You have been disconnected from the server!", ConsoleTypes.DISCONNECT)
-                
-                for i, player in enumerate(self.player_data):
-                    self.player_data[i] = Player(i)
+                elif event.type == enet.EVENT_TYPE_CONNECT:
+                    self.console_msg.emit(f"You have connected to the server!", ConsoleTypes.CONNECT)
+                    continue
+                elif event.type == enet.EVENT_TYPE_DISCONNECT:
+                    if event.data == DisconnectSource.DEFAULT.value:
+                        self.console_msg.emit(f"You have been disconnected from the server!", ConsoleTypes.DISCONNECT)
+                    elif event.data == DisconnectSource.SVR_END.value:
+                        self.console_msg.emit(f"You have been disconnected! The server has ended!", ConsoleTypes.DISCONNECT)
+                    elif event.data == DisconnectSource.SVR_KICK.value:
+                        self.console_msg.emit(f"You have been kicked from the server!", ConsoleTypes.DISCONNECT)
+                    elif event.data == DisconnectSource.VERSION.value:
+                        self.console_msg.emit(f"Your version of SMSO is not compatible with the server!", ConsoleTypes.DISCONNECT)
+                    else:
+                        self.console_msg.emit(f"You have been disconnected from the server!", ConsoleTypes.DISCONNECT)
+                    
+                    for i, player in enumerate(self.player_data):
+                        self.player_data[i] = Player(i)
 
-                self.is_connected = False
-                self.disconnection_succeeded.emit()
-                self.usernames_updated.emit([player.username for player in self.player_data if player.connected])
-                continue
+                    self.is_connected = False
+                    self.disconnection_succeeded.emit()
+                    self.usernames_updated.emit([player.username for player in self.player_data if player.connected])
+                    continue
 
-            elif event.type == enet.EVENT_TYPE_RECEIVE:
-                data = self.network.decode_data(event.packet.data)
-                # this line accesses the function specified by the dataType within self.receive_opts, which is created in __init__(). if the
-                # data type isn't found, it calls self.on_unknown() instead
-                self.receive_opts.get(data.dataType, self.on_unknown)(data, event)
+                elif event.type == enet.EVENT_TYPE_RECEIVE:
+                    data = self.network.decode_data(event.packet.data)
+                    # this line accesses the function specified by the dataType within self.receive_opts, which is created in __init__(). if the
+                    # data type isn't found, it calls self.on_unknown() instead
+                    self.receive_opts.get(data.dataType, self.on_unknown)(data, event)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.gui_exception_occurred.emit(exc_type, exc_value, exc_traceback)
 
     # data about all other clients when you connect
     def on_self_connect(self, data: dict, event: enet.Event) -> None:
@@ -520,7 +546,7 @@ class Client(QObject):
         x != 0x18100340 and x != 0x10100343 and x != 0x00000350 and x != 0x00000351 and x != 0x00000352
         and x != 0x0000035B and x != 0x00000353 and x != 0x0000035C and x != 0x10000357 and 
         x != 0x10000556 and x != 0x10000554 and x != 0x10000358 and x != 0x00810446 and x != 0x10001308
-        and x != 0x00000560 and x != 0x81089B):
+        and x != 0x00000560 and x != 0x81089B and x != 0x281089A):
             self.memory.write_u32(dmy.pDummyMario + 0x7C, data.currentState)
             self.memory.write_u32(dmy.pDummyMario + 0x80, data.previousState)
             self.memory.write_u32(dmy.pDummyMario + 0x84, data.substate)
@@ -627,10 +653,10 @@ class Client(QObject):
     def on_start_tag(self, data: dict, event: enet.Event) -> None:
         if data.start:
             self.console_msg.emit("The server has started tag!", ConsoleTypes.INFO)
-            self.memory.write_u8(InGameVars.TAG_BOOL, 1)
+            self.memory.write_u8(InGameVars.TAG_ACTIVE, 1)
         else:
             self.console_msg.emit("The server has stopped tag!", ConsoleTypes.INFO)
-            self.memory.write_u8(InGameVars.TAG_BOOL, 0)
+            self.memory.write_u8(InGameVars.TAG_ACTIVE, 0)
 
     def on_pause_flags(self, data: dict, event: enet.Event) -> None:
         self.pause_flags = True
@@ -645,7 +671,6 @@ class Client(QObject):
     def on_reset_tag(self, data: dict, event: enet.Event) -> None:
         self.console_msg.emit("The server has reset tag!", ConsoleTypes.INFO)
         self.memory.write_u8(InGameVars.TAG_RESET, 1)
-        self.console_msg.emit("The current tag game has been reset by the server!", ConsoleTypes.INFO)
 
     def on_toggle_refills(self, data: dict, event: enet.Event) -> None:
         self.memory.write_u8(InGameVars.FLUDD_REFILLS, data.disable)
@@ -671,6 +696,30 @@ class Client(QObject):
         else:
             self.console_msg.emit("Level changes for clients have been turned off!", ConsoleTypes.INFO)
             self.allow_level_changes_sig.emit(False)
+
+    def on_manhunt_status(self, data: dict, event: enet.Event) -> None:
+        self.manhunt_status = data.manhunt_status
+        if data.manhunt_status == ManhuntStatus.HUNTER.value:
+            self.console_msg.emit("The server has made you a hunter!", ConsoleTypes.INFO)
+            self.memory.write_u8(InGameVars.IS_HUNTER, 1)
+        elif data.manhunt_status == ManhuntStatus.RUNNER.value:
+            self.console_msg.emit("The server has made you a runner!", ConsoleTypes.INFO)
+            self.memory.write_u8(InGameVars.IS_HUNTER, 0)
+
+    def on_start_manhunt(self, data: dict, event: enet.Event) -> None:
+        if data.start:
+            self.console_msg.emit("The server has started manhunt!", ConsoleTypes.INFO)
+            self.memory.write_u8(InGameVars.MANHUNT_ACTIVE, 1)
+        else:
+            self.console_msg.emit("The server has stopped manhunt!", ConsoleTypes.INFO)
+            self.memory.write_u8(InGameVars.MANHUNT_ACTIVE, 0)
+
+    def on_reset_manhunt(self, data: dict, event: enet.Event) -> None:
+        self.console_msg.emit("The server has reset manhunt!", ConsoleTypes.INFO)
+        self.memory.write_u8(InGameVars.MANHUNT_RESET, 1)
+
+    def on_manhunt_damage(self, data: dict, event: enet.Event) -> None:
+        self.memory.write_u8(InGameVars.RECEIVE_DAMAGE_SOUND, 1)
 
     # in case of some packet corruption or some huge bug where a packet's dataType value is unknown, this function is called instead
     def on_unknown(self, data: dict, event: enet.Event) -> None:
@@ -752,15 +801,23 @@ class Client(QObject):
     ###########################
 
     def client_send_loop(self) -> None:
-        while self.running:
-            for frame in range(30):
-                sleep(1/30)
-                if self.memory.read_u32(0x82500000) == 0:   # check if models have already been injected
-                    self.inject_models()
-                if self.is_connected == False:
-                    break
-                self.send_cli_data()
-                self.handle_gamemode(frame)
+        try:
+            while self.running:
+                for frame in range(30):
+                    sleep(1/30)
+
+                    self.check_for_exception()
+                    if self.memory.read_u32(0x82500000) == 0:   # check if models have already been injected
+                        self.inject_models()
+                    if self.is_connected == False:
+                        break
+                    if self.memory.read_u8(InGameVars.SEND_DAMAGE_SOUND) == 1:
+                        self.send_damage_sound()
+                    self.send_cli_data()
+                    self.handle_gamemode(frame)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.gui_exception_occurred.emit(exc_type, exc_value, exc_traceback)
 
     def send_cli_data(self) -> None:
         self.client_data.update_data()
@@ -771,6 +828,8 @@ class Client(QObject):
             self.handle_default(frame)
         elif self.gamemode == GamemodeTypes.TAG.value:
             self.handle_tag()
+        elif self.gamemode == GamemodeTypes.MANHUNT.value:
+            self.handle_manhunt(frame)
 
     def handle_default(self, frame: int) -> None:
         if frame == 0 and not self.pause_flags and self.queued_flag_updates.empty():
@@ -780,9 +839,53 @@ class Client(QObject):
     def handle_tag(self) -> None:
         # request to become tagger if mario has died
         clt = ClientPointers(self.memory)
-        if self.memory.read_u8(InGameVars.TAG_BOOL) == 1 and self.tag_status == TagStatus.HIDER.value and clt.gameState == 7:
+        if self.memory.read_u8(InGameVars.TAG_ACTIVE) == 1 and self.tag_status == TagStatus.HIDER.value and clt.gameState == 7:
             self.tag_status = TagStatus.PENDING_TAGGER.value
             tag_status_data = {'dataType': ServerRcvDataTypes.TAG_STATUS.value, 'tag_status': TagStatus.TAGGER.value}
             self.network.send(json.dumps(tag_status_data))
+
+    def handle_manhunt(self, frame: int) -> None:
+        if frame == 0 and self.queued_flag_updates.empty():
+            self.flag_data.update_data()
+            self.network.send(self.flag_data.to_json())
+
+    # if sms experiences an unhandled exception, the GUI should intercept it here
+    def check_for_exception(self) -> None:
+        o = InGameVars.OS_CONTEXT
+
+        if self.memory.read_u8(o) == 1:
+            exception_context = ""
+            exception_context += f"CONTEXT:{self.memory.read_u32(o + 0x4):08X}H   ({self.memory.read_string(o + 0x8)} EXCEPTION)\n"
+            exception_context += f"SRR0:   {self.memory.read_u32(o + 0xC):08X}H   SRR1:{self.memory.read_u32(o + 0x10):08X}H\n"
+            exception_context += f"DSISR:  {self.memory.read_u32(o + 0x14):08X}H   DAR:{self.memory.read_u32(o + 0x18):08X}H\n"
+
+            exception_context += "-------------------------------------- GPR\n"
+            for i in range(10):
+                exception_context += f"R{i:02d}:{self.memory.read_u32(o + 0x1C + i*4):08X}H  R{i+11:02d}:{self.memory.read_u32(o + 0x1C + 44 + i*4):08X}H  R{i+22:02d}:{self.memory.read_u32(o + 0x1C + 88 + i*4):08X}H\n"
+
+            exception_context += f"R{10:02d}:{self.memory.read_u32(o + 0x1C + 40):08X}H  R{21:02d}:{self.memory.read_u32(o + 0x1C + 84):08X}H\n"
+
+            exception_context += "-------------------------------------- FPR\n"
+            for i in range(10):
+                exception_context += f"F{i:02d}:{self.memory.read_f64(o + 0xA0 + i*8):10.3g} F{i+11:02d}:{self.memory.read_f64(o + 0xA0 + 44 + i*8):10.3g} F{i+22:02d}:{self.memory.read_f64(o + 0xA0 + 88 + i*8):10.3g}\n"
+
+            exception_context += f"F{10:02d}:{self.memory.read_f64(o + 0xA0 + 80):10.3g} F{21:02d}:{self.memory.read_f64(o + 0xA0 + 168):10.3g}\n"
+
+            exception_context += "-------------------------------------- TRACE\n"
+            exception_context += "Address:   BackChain   LR save\n"
+            for i in range(10):
+                address = self.memory.read_u32(o + 0x1A8 + i*12)
+                back_chain = self.memory.read_u32(o + 0x1AC + i*12)
+                lr_save = self.memory.read_u32(o + 0x1B0 + i*12)
+
+                if address == 0: break
+
+                exception_context += f"{address:08X}:  {back_chain:08X}    {lr_save:08X}\n"
+
+            exception_context += "--------------------------------------\n"
+
+            self.game_exception_occured.emit(exception_context)
+ 
+            self.memory.write_u8(o, 0)
 
         

@@ -75,6 +75,7 @@ class NetworkClient:
         for i in range(30):
             sleep(0.1)
             event = self.host.service(0)
+
             if event.type == enet.EVENT_TYPE_CONNECT:
                 self.send(json.dumps(data), reliable=True)
                 return True

@@ -1,10 +1,9 @@
 // This file is responsible for all of the functions that deal with the tag gamemode
 #include "defines.h"
 
-int gamemode = 0;
 int clientTagTime = 0;
 int savedFlags = 0;
-bool isTagger = false, isTimerOnscreen = false, connected = false, previouslyConnected = false, tagBool = false, fluddRefills = false, tagReset = false;
+bool isTagger = false, isTimerOnscreen = false, connected = false, previouslyConnected = false, tagActive = false, fluddRefills = false, tagReset = false;
 
 // function prototypes (the first 2 are for in-game funcs)
 int checkDistance(float* xyz1, float* xyz2, float one, float two, float three, float four);
@@ -24,7 +23,7 @@ void tagMain() {
 // this function checks if a reset has been requested by the GUI
 void checkIfReset() {
 	if (tagReset) {
-		tagBool = false;
+		tagActive = false;
 
 		if (isTimerRunning())
 			stopTimer();
@@ -38,7 +37,7 @@ void checkIfReset() {
 
 // this function is what kills your mario when he is tagged
 void checkIfTagged() {
-	if (gamemode != 1 || !tagBool)
+	if (gamemode != 1 || !tagActive)
 		return;
 
 	u32* currentMario = fromRegister(30);
@@ -75,11 +74,11 @@ void checkStartTimer() {
 		return;
 	}
 
-    // if the gamemode is activated (tagBool) and the timer isn't running and your mario isn't a tagger, start the timer
-	if (tagBool && !isTagger && !isTimerRunning()) {
+    // if the gamemode is activated (tagActive) and the timer isn't running and your mario isn't a tagger, start the timer
+	if (tagActive && !isTagger && !isTimerRunning()) {
 		startTimer();
 	}
-    // if tagBool isn't 1 but tag is still the gamemode, we put the timer on screen without starting it
+    // if tagActive isn't 1 but tag is still the gamemode, we put the timer on screen without starting it
 	else if (!isTimerOnscreen) {
 		insertTimer();
 	}
@@ -95,7 +94,7 @@ void checkStopTimer() {
 	if (stage == 0xF) return;       // returns if on title screen
 
 	u32* marDirector = SDAword(-0x6048);
-	if (tagBool) {
+	if (tagActive) {
 		if (!isTagger) {
 
             // if your mario is dead (7) or the stage is changing (9), stop the timer and store the current time
@@ -115,7 +114,7 @@ void checkStopTimer() {
 	}
 	else {
 
-        // if the timer is still running after tagBool is 0, stop the timer and store the current time
+        // if the timer is still running after tagActive is 0, stop the timer and store the current time
 		if (isTimerRunning()) {
 			stopTimer();
 			u32* TGCConsole2 = marDirector[0x74 / 0x4];
@@ -158,9 +157,12 @@ void checkChangeTimer() {
 }
 
 void checkTaggerFlags() {
+	if (gamemode != 1)
+		return;
+
 	u8* mario = SDAword(-0x60D8);
 	u8 shirtFlag = mario[0x119];
-	u8* marioCap = ((u32*)mario)[0x3E0 / 4];
+	u8* marioCap = ((u32*)mario)[0x3E0 / 4]; // mariocap is used for sunglasses
 	if (isTagger && !(shirtFlag & 16)) {
 		shirtFlag += 0x10;
 		mario[0x119] = shirtFlag;
@@ -213,7 +215,7 @@ bool isTimerRunning() {
 }
 
 // when a stage changes, we need to make sure this variable is set to 0
-void onChangeStage() {
+void tag_onStageLoad() {
 	isTimerOnscreen = false;
 }
 
@@ -282,13 +284,14 @@ void tagRespawnEpisodeSecret(u8* nextStage) {
 
 // if tag is the gamemode, mario deaths don't decrease the 1up count
 void freezeLives() {
-	if (gamemode != 1) {
+	if (gamemode != 1 && gamemode != 2) { // move to gamemode.c later
 		__asm("stw 0, 0x0078 (3)");
 	}
 }
 
+// rename this in the future
 void checkForTagger(u32* mario) {
-	if (fluddRefills && !isTagger && tagBool) {
+	if (fluddRefills && !isTagger && tagActive) {
 		int currentFlags = mario[0x118 / 4];
 		int maskedFlags = currentFlags & 0x00030000;
 		if (maskedFlags != 0) {
@@ -307,16 +310,16 @@ void checkForTagger_Restore() {
 }
 
 void stopRefill29() {
-	if (fluddRefills && !isTagger && tagBool) return;
+	if (fluddRefills && !isTagger && tagActive) return;
 	else __asm("stw 0, 0x1C80 (29)");
 }
 
 void stopRefill30() {
-	if (fluddRefills && !isTagger && tagBool) return;
+	if (fluddRefills && !isTagger && tagActive) return;
 	else __asm("stw 0, 0x1C80 (30)");
 }
 
 void stopRefill31() {
-	if (fluddRefills && !isTagger && tagBool) return;
+	if (fluddRefills && !isTagger && tagActive) return;
 	else __asm("stw 0, 0x1C80 (31)");
 }

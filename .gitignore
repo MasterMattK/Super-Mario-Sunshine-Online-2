@@ -1,0 +1,12 @@
+__pycache__
+main.dol
+project.bin
+project.map
+config.ini
+exceptions.log
+dol_path.txt
+dol
+.s
+.o
+build
+.vscode

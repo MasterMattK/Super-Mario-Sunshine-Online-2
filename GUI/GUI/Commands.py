@@ -21,6 +21,7 @@ class ServerCommands(QObject):
     list_players_sig = Signal()
     on_teleport_sig = Signal(str, str)
     tag_sig = Signal()
+    manhung_sig = Signal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -147,12 +148,24 @@ class ServerCommands(QObject):
                 "description": "Changes the specified Tag/Hide n' Seek setting. Type '/tag help' for more info.",
                 "requires_server": True,
                 "handler": self.on_tag
+            },
+            "/manhunt": {
+                "args": "<i>&lt;{}&gt;</i>".format("setting"),
+                "min_args": 1,
+                "max_args": 3,
+                "description": "Changes the specified Manhunt setting. Type '/manhunt help' for more info.",
+                "requires_server": True,
+                "handler": self.on_manhunt
             }
         }
 
         self.tag_commands = TagCommands()
         self.tag_commands.console_msg.connect(lambda msg, type: self.console_msg.emit(msg, type))
         self.tag_commands.set_config.connect(lambda section, option, value, type: self.set_config.emit(section, option, value, type))
+        
+        self.manhunt_commands = ManhuntCommands()
+        self.manhunt_commands.console_msg.connect(lambda msg, type: self.console_msg.emit(msg, type))
+        self.manhunt_commands.set_config.connect(lambda section, option, value, type: self.set_config.emit(section, option, value, type))
 
 
     # handles the command input from the user
@@ -261,7 +274,7 @@ class ServerCommands(QObject):
         self.list_players_sig.emit()
 
     def on_about(self) -> None:
-        self.console_msg.emit("Official SMSO Discord: https://discord.gg/aYHKKDhtuv. Stop by for credits, updates, news, and more!", ConsoleTypes.INFO)
+        self.console_msg.emit("Official SMSO Discord: https://discord.gg/aYHKKDhtuv. Stop by for credits, updates, news, community, and more!", ConsoleTypes.INFO)
 
     def on_teleport(self, tp_user: str, tp_dest: str) -> None:
         self.on_teleport_sig.emit(tp_user, tp_dest)
@@ -283,6 +296,24 @@ class ServerCommands(QObject):
                     break
         else:
             self.console_msg.emit(f"{tag_option} is not a recognized tag command! Do /tag help for a list of available commands.", ConsoleTypes.ERROR)
+
+    def on_manhunt(self, manhunt_option: str, user: str="") -> None:
+        for manhunt_command_name, manhunt_command in self.manhunt_commands.commands.items():
+            if manhunt_option == manhunt_command_name:
+                if user:
+                    if manhunt_command['arg_num'] == 1:
+                        manhunt_command["handler"](user)
+                    else:
+                        self.console_msg.emit(f"/tag {manhunt_command_name} requires 0 arguments, but you provided 1! Do /manhunt help for a list of available commands.", ConsoleTypes.ERROR)
+                    break
+                elif not user:
+                    if manhunt_command['arg_num'] == 0:
+                        manhunt_command["handler"]()
+                    else:
+                        self.console_msg.emit(f"/tag {manhunt_command_name} requires 1 argument, but you provided 0! Do /manhunt help for a list of available commands.", ConsoleTypes.ERROR)
+                    break
+        else:
+            self.console_msg.emit(f"{manhunt_option} is not a recognized manhunt command! Do /manhunt help for a list of available commands.", ConsoleTypes.ERROR)
 
 class TagCommands(QObject):
     console_msg = Signal(str, ConsoleTypes)
@@ -376,6 +407,80 @@ class TagCommands(QObject):
             self.set_config.emit("SERVER", "disable_refills", "True", ConfigTypes.BOOL)
         else:
             self.console_msg.emit(f"/tag refills requires an argument of 'on' or 'off'! You provided '{toggle}'!", ConsoleTypes.ERROR)
+
+class ManhuntCommands(QObject):
+    console_msg = Signal(str, ConsoleTypes)
+    set_config = Signal(str, str, str, ConfigTypes)
+
+    add_sig = Signal(str)
+    remove_sig = Signal(str)
+    start_sig = Signal()
+    stop_sig = Signal()
+    reset_sig = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.commands = {
+            "help": {
+                "args": "",
+                "arg_num": 0,
+                "description": "Show a list of available manhunt commands",
+                "handler": self.on_help
+            },
+            "add": {
+                "args": "<i>&lt;{}&gt;</i>".format("user"),
+                "arg_num": 1,
+                "description": "Add a user to the manhunt team",
+                "handler": self.on_add
+            },
+            "remove": {
+                "args": "<i>&lt;{}&gt;</i>".format("user"),
+                "arg_num": 1,
+                "description": "Remove a user to the manhunt team",
+                "handler": self.on_remove
+            },
+            "start": {
+                "args": "",
+                "arg_num": 0,
+                "description": "Start a game of manhunt",
+                "handler": self.on_start
+            },
+            "stop": {
+                "args": "",
+                "arg_num": 0,
+                "description": "Stop a game of manhunt",
+                "handler": self.on_stop
+            },
+            "reset": {
+                "args": "",
+                "arg_num": 0,
+                "description": "Resets a game of manhunt",
+                "handler": self.on_reset
+            }
+        }
+
+    def on_help(self):
+        cmd_help = ""
+        for command_name, command in self.commands.items():
+            cmd_help += f"\n>> <b>/manhunt {command_name} {command['args']}</b>: {command['description']}"
+            
+        self.console_msg.emit(cmd_help, ConsoleTypes.INFO)
+
+    def on_add(self, user: str):
+        self.add_sig.emit(user)
+    
+    def on_remove(self, user: str):
+        self.remove_sig.emit(user)
+    
+    def on_start(self):
+        self.start_sig.emit()
+    
+    def on_stop(self):
+        self.stop_sig.emit()
+    
+    def on_reset(self):
+        self.reset_sig.emit()
 
 class ClientCommands(QObject):
     console_msg = Signal(str, ConsoleTypes) # signal used to emit a console message on the gui

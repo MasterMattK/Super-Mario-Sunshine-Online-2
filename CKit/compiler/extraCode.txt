@@ -23,3 +23,6 @@ $ branch after allowShineDecrement()
 
 $ nop after allowBlueDecrement()
 041475c4 60000000
+
+$ nop to ensure error console shows up
+0429d0bc 60000000
