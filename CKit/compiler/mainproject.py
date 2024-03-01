@@ -158,6 +158,7 @@ p.branchlink(0x802821a8, "stopRefill30")
 p.branch(0x80252bac, "gamemodeMain")
 p.branch(0x8024db08, "marioDrawMain")
 p.branch(0x8029a318, "hasCutsceneStarted")
+p.branch(0x80291828, "checkIfTalking")
 
 with open(".\\dol_path.txt", "r") as f:
     dol_path = f.readline()

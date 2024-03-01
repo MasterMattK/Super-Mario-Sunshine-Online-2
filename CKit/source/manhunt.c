@@ -1,7 +1,7 @@
 // This file is responsible for all of the functions that deal with the manhunt gamemode
 #include "defines.h"
 
-bool isHunter = false, manhuntActive = false, manhuntReset = false, sendDamageSound = false, receiveDamageSound = false;
+bool isHunter = false, manhuntActive = false, manhuntReset = false, sendDamageSound = false, receiveDamageSound = false, isTalking = false;
 unsigned int cooldown = 0, cooldownStarted = 0;
 
 // function prototypes (the first 2 are for in-game funcs)
@@ -82,7 +82,7 @@ void checkHunterFlags() {
 void refreshCooldownIfLoading() {
 	int *mario = SDAword(-0x60D8);
 	if (mario[0x7C / 4] == 0x00001337) {
-		setCooldown(3);
+		setCooldown(2);
 	}
 }
 
@@ -90,11 +90,15 @@ void refreshCooldownIfLoading() {
 void refreshCooldownIfCutscene() {
 	u16 *TMarDirector = SDAword(-0x6048);
 	if (cutsceneCooldownPending) {
-		setCooldown(5);		// 5 is for debug, change to 1
+		setCooldown(1);		// 5 is for debug, change to 1
 		cutsceneCooldownPending = false;
 	} else if (TMarDirector[0x4C / 2] & 0x0040) {
-		setCooldown(5);		// 5 is for debug, change to 1
+		setCooldown(1);		// 5 is for debug, change to 1
 	}
+}
+
+void checkIfTalking() {
+	isTalking = true;
 }
 
 void setCooldown(int time) {
@@ -103,6 +107,11 @@ void setCooldown(int time) {
 }
 
 int isInCooldown() {
+	if (isTalking) {		// temp solution
+		isTalking = false;
+		return true;
+	}
+
 	if (currentTime - cooldown >= cooldownStarted) {
 		return false;
 	}
@@ -111,7 +120,7 @@ int isInCooldown() {
 }
 
 void manhunt_onStageLoad() {
-	setCooldown(3);
+	setCooldown(2);
 }
 
 void manhunt_checkGoAppear() {
